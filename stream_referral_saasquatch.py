@@ -68,13 +68,14 @@ def stream_records(entity, records):
 
 def load_config(config_file):
     global API_KEY
+    global ALIAS
     global BASE_URL
 
     with open(config_file) as f:
         config = json.load(f)
 
     API_KEY = config['api_key']
-    ALIAS = config['alias']
+    ALIAS = config['tenant_alias']
     BASE_URL = BASE_URL.format(alias=ALIAS)
 
     logger.debug("Loaded config. alias={}".format(ALIAS))
