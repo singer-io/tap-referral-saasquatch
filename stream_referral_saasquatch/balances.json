@@ -1,0 +1,59 @@
+{
+  "type": "object", 
+  "properties": {
+    "count": {
+      "type": [
+        "null", 
+        "integer"
+      ]
+    }, 
+    "featureType": {
+      "type": [
+        "null", 
+        "string"
+      ]
+    }, 
+    "totalRedeemedCredit": {
+      "type": [
+        "null", 
+        "integer"
+      ]
+    }, 
+    "referredDiscountPercent": {
+      "type": [
+        "null", 
+        "integer"
+      ]
+    }, 
+    "totalDiscountPercent": {
+      "type": [
+        "null", 
+        "integer"
+      ]
+    }, 
+    "totalAssignedCredit": {
+      "type": [
+        "null", 
+        "integer"
+      ]
+    }, 
+    "referrerDiscountPercent": {
+      "type": [
+        "null", 
+        "integer"
+      ]
+    }, 
+    "type": {
+      "type": [
+        "null", 
+        "string"
+      ]
+    }, 
+    "unit": {
+      "type": [
+        "null", 
+        "string"
+      ]
+    }
+  }
+}

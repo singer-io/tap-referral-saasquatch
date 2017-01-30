@@ -1,0 +1,55 @@
+{
+  "type": "object", 
+  "properties": {
+    "currency": {
+      "type": [
+        "null", 
+        "string"
+      ]
+    }, 
+    "referral": {
+      "type": [
+        "null", 
+        "string"
+      ]
+    }, 
+    "id": {
+      "type": [
+        "null", 
+        "integer"
+      ]
+    }, 
+    "subscription": {
+      "type": [
+        "null", 
+        "object"
+      ], 
+      "properties": {
+        "status": {
+          "type": [
+            "null", 
+            "string"
+          ]
+        }, 
+        "billingIntervalType": {
+          "type": [
+            "null", 
+            "string"
+          ]
+        }, 
+        "value": {
+          "type": [
+            "null", 
+            "number"
+          ]
+        }, 
+        "billingIntervalValue": {
+          "type": [
+            "null", 
+            "integer"
+          ]
+        }
+      }
+    }
+  }
+}
