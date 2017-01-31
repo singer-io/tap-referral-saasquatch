@@ -20,6 +20,7 @@ TENANT_ALIAS = None
 BASE_URL = "https://app.referralsaasquatch.com/api/v1/{tenant_alias}"
 DATETIME_FMT = "%Y-%m-%dT%H:%M:%SZ"
 DEFAULT_START_DATE = datetime.datetime(2016, 1, 1).strftime(DATETIME_FMT)
+PERSISTED_COUNT = 0
 
 state = {
     "users": DEFAULT_START_DATE,
@@ -188,6 +189,7 @@ def transform_row(entity, row):
 
 
 def sync_entity(entity):
+    global PERSISTED_COUNT
     logger.info("{}: Starting sync from {}".format(entity, state[entity]))
 
     schema = load_schema(entity)
@@ -211,6 +213,7 @@ def sync_entity(entity):
         rows = [transform_row(row, schema) for row in rows]
         stream_records(entity, rows)
         logger.info("{}: Persisted {} records".format(entity, len(rows)))
+        PERSISTED_COUNT += len(rows)
     else:
         logger.info("{}: No rows to persist".format(entity))
 
@@ -220,9 +223,13 @@ def sync_entity(entity):
 
 
 def do_sync():
+    logger.info("Starting Referral Saasquatch sync")
+
     sync_entity("users")
     sync_entity("reward_balances")
     sync_entity("referrals")
+
+    logger.info("Completed Referral Saasquatch sync. {} rows synced in total".format(PERSISTED_COUNT))
 
 
 def do_check():
