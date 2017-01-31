@@ -188,9 +188,13 @@ def transform_row(entity, row):
 
 
 def sync_entity(entity):
+    logger.info("{}: Starting sync from {}".format(entity, state[entity]))
+
     schema = load_schema(entity)
     stream_schema(entity, schema)
+    logger.info("{}: Sent schema".format(entity))
 
+    logger.info("{}: Requesting export".format(entity))
     try:
         export_start = datetime.datetime.utcnow().strftime(DATETIME_FMT)
         export_id = request_export(entity)
@@ -198,12 +202,21 @@ def sync_entity(entity):
         logger.fatal(e.message)
         sys.exit(-1)
 
+    logger.info("{}: Export ready".format(entity))
+
     rows = stream_export(entity, export_id)
-    rows = [transform_row(row, schema) for row in rows]
-    stream_records(entity, rows)
+    logger.info("{}: Got {} records".format(entity, len(rows)))
+
+    if rows:
+        rows = [transform_row(row, schema) for row in rows]
+        stream_records(entity, rows)
+        logger.info("{}: Persisted {} records".format(entity, len(rows)))
+    else:
+        logger.info("{}: No rows to persist".format(entity))
 
     state[entity] = export_start
     stream_state()
+    logger.info("{}: State synced to {}".format(entity, export_start))
 
 
 def do_sync():
