@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "accountId": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "integer"
+    },
+    "unit": {
+      "type": "string"
+    }
+  }
+}

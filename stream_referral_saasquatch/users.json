@@ -1,329 +1,57 @@
 {
-  "type": "object", 
+  "type": "object",
   "properties": {
-    "lastSeenIP": {
-      "type": [
-        "null", 
-        "string"
-      ]
-    }, 
-    "referralSource": {
-      "type": [
-        "null", 
-        "string"
-      ]
-    }, 
-    "shareLinks": {
-      "type": [
-        "null", 
-        "object"
-      ], 
-      "properties": {
-        "facebookShareLink": {
-          "type": [
-            "null", 
-            "string"
-          ]
-        }, 
-        "twitterShareLink": {
-          "type": [
-            "null", 
-            "string"
-          ]
-        }, 
-        "emailShareLink": {
-          "type": [
-            "null", 
-            "string"
-          ]
-        }, 
-        "mobileFacebookShareLink": {
-          "type": [
-            "null", 
-            "string"
-          ]
-        }, 
-        "MOBILE": {
-          "type": [
-            "null", 
-            "object"
-          ], 
-          "properties": {
-            "facebookShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "twitterShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "emailShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "shareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "linkedinShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }
-          }
-        }, 
-        "mobileEmailShareLink": {
-          "type": [
-            "null", 
-            "string"
-          ]
-        }, 
-        "POPUP": {
-          "type": [
-            "null", 
-            "object"
-          ], 
-          "properties": {
-            "facebookShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "twitterShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "emailShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "shareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "linkedinShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }
-          }
-        }, 
-        "mobileTwitterShareLink": {
-          "type": [
-            "null", 
-            "string"
-          ]
-        }, 
-        "HOSTED": {
-          "type": [
-            "null", 
-            "object"
-          ], 
-          "properties": {
-            "facebookShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "twitterShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "emailShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "shareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "linkedinShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }
-          }
-        }, 
-        "mobileShareLink": {
-          "type": [
-            "null", 
-            "string"
-          ]
-        }, 
-        "EMBED": {
-          "type": [
-            "null", 
-            "object"
-          ], 
-          "properties": {
-            "facebookShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "twitterShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "emailShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "shareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "linkedinShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }
-          }
-        }, 
-        "shareLink": {
-          "type": [
-            "null", 
-            "string"
-          ]
-        }, 
-        "EMAIL": {
-          "type": [
-            "null", 
-            "object"
-          ], 
-          "properties": {
-            "facebookShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "twitterShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "emailShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "shareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "linkedinShareLink": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }
-          }
-        }
-      }
-    }, 
-    "firstName": {
-      "type": [
-        "null", 
-        "string"
-      ]
-    }, 
-    "locale": {
-      "type": [
-        "null", 
-        "string"
-      ]
-    }, 
-    "lastName": {
-      "type": [
-        "null", 
-        "string"
-      ]
-    }, 
-    "imageUrl": {
-      "type": [
-        "null", 
-        "string"
-      ]
-    }, 
     "id": {
-      "type": [
-        "null", 
-        "integer"
-      ]
-    }, 
-    "emailHash": {
-      "type": [
-        "null", 
-        "string"
-      ]
-    }, 
-    "dateCreated": {
-      "type": [
-        "null", 
-        "datetime"
-      ]
-    }, 
-    "firstSeenIP": {
-      "type": [
-        "null", 
-        "string"
-      ]
-    }, 
-    "referralCode": {
-      "type": [
-        "null", 
-        "string"
-      ]
-    }, 
-    "email": {
-      "type": [
-        "null", 
-        "string"
-      ]
-    }, 
+      "type": "string"
+    },
     "accountId": {
-      "type": [
-        "null", 
-        "integer"
-      ]
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "firstName": {
+      "type": "string"
+    },
+    "lastName": {
+      "type": "string"
+    },
+    "imageUrl": {
+      "type": "string"
+    },
+    "firstSeenIP": {
+      "type": "string"
+    },
+    "lastSeenIP": {
+      "type": "string"
+    },
+    "dateCreated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "emailHash": {
+      "type": "string"
+    },
+    "referralSource": {
+      "type": "string"
+    },
+    "locale": {
+      "type": "string"
+    },
+    "shareLink": {
+      "type": "string"
+    },
+    "facebookShareLink": {
+      "type": "string"
+    },
+    "twitterShareLink": {
+      "type": "string"
+    },
+    "emailShareLink": {
+      "type": "string"
+    },
+    "linkedinShareLink": {
+      "type": "string"
     }
   }
 }

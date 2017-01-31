@@ -1,141 +1,48 @@
 {
-  "type": "object", 
+  "type": "object",
   "properties": {
-    "referredUserId": {
-      "type": [
-        "null", 
-        "integer"
-      ]
-    }, 
-    "fraudSignals": {
-      "type": [
-        "null", 
-        "object"
-      ], 
-      "properties": {
-        "ip": {
-          "type": [
-            "null", 
-            "object"
-          ], 
-          "properties": {
-            "message": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "score": {
-              "type": [
-                "null", 
-                "integer"
-              ]
-            }
-          }
-        }, 
-        "rate": {
-          "type": [
-            "null", 
-            "object"
-          ], 
-          "properties": {
-            "message": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "score": {
-              "type": [
-                "null", 
-                "integer"
-              ]
-            }
-          }
-        }, 
-        "name": {
-          "type": [
-            "null", 
-            "object"
-          ], 
-          "properties": {
-            "message": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "score": {
-              "type": [
-                "null", 
-                "integer"
-              ]
-            }
-          }
-        }, 
-        "email": {
-          "type": [
-            "null", 
-            "object"
-          ], 
-          "properties": {
-            "message": {
-              "type": [
-                "null", 
-                "string"
-              ]
-            }, 
-            "score": {
-              "type": [
-                "null", 
-                "integer"
-              ]
-            }
-          }
-        }
-      }
-    }, 
-    "moderationStatus": {
-      "type": [
-        "null", 
-        "string"
-      ]
-    }, 
-    "referredReward": {
-      "type": [
-        "null", 
-        "string"
-      ]
-    }, 
-    "referrerReward": {
-      "type": [
-        "null", 
-        "string"
-      ]
-    }, 
-    "referredModerationStatus": {
-      "type": [
-        "null", 
-        "string"
-      ]
-    }, 
-    "referrerModerationStatus": {
-      "type": [
-        "null", 
-        "string"
-      ]
-    }, 
-    "referrerUser": {
-      "type": [
-        "null", 
-        "integer"
-      ]
-    }, 
     "id": {
-      "type": [
-        "null", 
-        "string"
-      ]
+      "type": "string"
+    },
+    "referredUser": {
+      "type": "string"
+    },
+    "referredAccount": {
+      "type": "string"
+    },
+    "referredReward": {
+      "type": "string"
+    },
+    "referredModerationStatus": {
+      "type": "string"
+    },
+    "referrerUser": {
+      "type": "string"
+    },
+    "referrerAccount": {
+      "type": "string"
+    },
+    "referrerReward": {
+      "type": "string"
+    },
+    "referrerModerationStatus": {
+      "type": "string"
+    },
+    "dateReferralStarted": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "dateReferralPaid": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "dateReferralEnded": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "dateModerated": {
+      "type": "string",
+      "format": "date-time"
     }
   }
 }
