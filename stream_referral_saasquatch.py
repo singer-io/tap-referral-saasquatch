@@ -96,7 +96,7 @@ def export_ready(export_id):
     headers = {'Content-Type': "application/json"}
     resp = session.get(url, auth=auth, headers=headers)
     result = resp.json()
-    return result['status'] == 'COMPLETED"
+    return result['status'] == 'COMPLETED'
 
 
 def request_export(entity):
@@ -246,7 +246,6 @@ def main():
     global QUIET
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('func', choices=['check', 'sync'])
     parser.add_argument('-c', '--config', help='Config file', required=True)
     parser.add_argument('-s', '--state', help='State file')
     parser.add_argument('-d', '--debug', dest='debug', action='store_true',
@@ -265,10 +264,7 @@ def main():
     if args.state:
         load_state(args.state)
 
-    if args.func == "check":
-        do_check()
-    else:
-        do_sync()
+    do_check()
 
 
 if __name__ == '__main__':
