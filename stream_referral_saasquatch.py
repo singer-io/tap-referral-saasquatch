@@ -7,7 +7,6 @@ import os
 import sys
 
 import backoff
-import dateutil.parser
 import requests
 import stitchstream
 
@@ -47,7 +46,7 @@ def export_ready(export_id):
     headers = {'Content-Type': "application/json"}
     resp = requests.get(url, auth=auth, headers=headers)
     result = resp.json()
-    return result['status'] == 'COMPLETED"
+    return result['status'] == 'COMPLETED'
 
 
 def request_export(entity):
