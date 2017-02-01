@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 
 import argparse
-import csv
 import datetime
 import json
-import logging
-import logging.config
 import os
 import sys
 
@@ -14,7 +11,6 @@ import dateutil.parser
 import requests
 import stitchstream
 
-QUIET = False
 API_KEY = None
 TENANT_ALIAS = None
 BASE_URL = "https://app.referralsaasquatch.com/api/v1/{tenant_alias}"
@@ -34,52 +30,7 @@ entity_export_types = {
     "referrals": "REFERRAL",
 }
 
-logging.config.fileConfig("/etc/stitch/logging.conf")
-logger = logging.getLogger("stitch.streamer")
-session = requests.Session()
-
-
-def stream_state():
-    if not QUIET:
-        stitchstream.write_state(state)
-    else:
-        logger.debug("Stream state")
-
-
-def stream_schema(entity, schema):
-    if not QUIET:
-        stitchstream.write_schema(entity, schema)
-    else:
-        logger.debug("Stream schema {}".format(entity))
-
-
-def stream_records(entity, records):
-    if not QUIET:
-        stitchstream.write_records(entity, records)
-    else:
-        logger.debug("Stream records {} ({})".format(entity, len(records)))
-
-
-def load_config(config_file):
-    global API_KEY
-    global TENANT_ALIAS
-    global BASE_URL
-
-    with open(config_file) as f:
-        config = json.load(f)
-
-    API_KEY = config['api_key']
-    TENANT_ALIAS = config['tenant_alias']
-    BASE_URL = BASE_URL.format(alias=TENANT_ALIAS)
-
-
-def load_state(state_file):
-    logger.info("Loading state from " + args.state)
-    with open(state_file) as f:
-        data = json.load(f)
-
-    state.update(data)
-    logger.info("State loaded. {}".format(state))
+logger = stitchstream.get_logger()
 
 
 def load_schema(entity):
@@ -94,7 +45,7 @@ def export_ready(export_id):
     url = BASE_URL + "/export/{}".format(export_id)
     auth = ("", API_KEY)
     headers = {'Content-Type': "application/json"}
-    resp = session.get(url, auth=auth, headers=headers)
+    resp = requests.get(url, auth=auth, headers=headers)
     result = resp.json()
     return result['status'] == 'COMPLETED"
 
@@ -112,21 +63,20 @@ def request_export(entity):
         },
     }
 
-    resp = session.post(url, auth=auth, headers=headers, json=data)
+    resp = requests.post(url, auth=auth, headers=headers, json=data)
     result = resp.json()
 
     if 'id' in result:
         waited = 0
-        while True:
+        while waited <= 3600:
             if export_ready(result['id']):
                 return result['id']
 
-            if (waited > 3600):
-                raise Exception("{} export took over an hour to complete. Aborting."
-                                .format(entity))
-
             time.sleep(5)
             waited += 5
+
+        raise Exception("{} export took over an hour to complete. Aborting."
+                        .format(entity))
 
     else:
         raise Exception("Request to create {} export failed: {} - {}"
@@ -137,7 +87,7 @@ def stream_export(entity, export_id):
     url = BASE_URL + "/export/{}/download".format(export_id)
     auth = ("", API_KEY)
     headers = {'Content-Type': "application/json"}
-    resp = session.get(url, auth=auth, headers=headers, stream=True)
+    resp = requests.get(url, auth=auth, headers=headers, stream=True)
 
     lines = [line.decode("utf-8") for line in r.iter_lines()]
 
@@ -180,12 +130,16 @@ TRANSFORMS = {
 }
 
 
-def transform_row(entity, row):
-    for field, transform in TRANSFORMS[entity].items():
-        if field in row:
-            row[field] = transform(row[field])
+def transform_field(entity, field, value):
+    if field in TRANSFORMS[entity]:
+        return TRANSFORMS[entity][field](value)
+    else:
+        return value
 
-    return row
+
+def transform_row(entity, row):
+    return {field: transform_field(entity, field, value)
+            for field, value in row.items()}
 
 
 def sync_entity(entity):
@@ -193,7 +147,7 @@ def sync_entity(entity):
     logger.info("{}: Starting sync from {}".format(entity, state[entity]))
 
     schema = load_schema(entity)
-    stream_schema(entity, schema)
+    stitchstream.write_schema(entity, schema)
     logger.info("{}: Sent schema".format(entity))
 
     logger.info("{}: Requesting export".format(entity))
@@ -209,16 +163,13 @@ def sync_entity(entity):
     rows = stream_export(entity, export_id)
     logger.info("{}: Got {} records".format(entity, len(rows)))
 
-    if rows:
-        rows = [transform_row(row, schema) for row in rows]
-        stream_records(entity, rows)
-        logger.info("{}: Persisted {} records".format(entity, len(rows)))
-        PERSISTED_COUNT += len(rows)
-    else:
-        logger.info("{}: No rows to persist".format(entity))
+    for row in rows:
+        transformed_row = transform_row(row, schema)
+        stitchstream.write_record(entity, transformed_row)
+        PERSISTED_COUNT += 1
 
     state[entity] = export_start
-    stream_state()
+    stitchstream.write_state(state)
     logger.info("{}: State synced to {}".format(entity, export_start))
 
 
@@ -229,12 +180,13 @@ def do_sync():
     sync_entity("reward_balances")
     sync_entity("referrals")
 
-    logger.info("Completed Referral Saasquatch sync. {} rows synced in total".format(PERSISTED_COUNT))
+    logger.info("Completed Referral Saasquatch sync. {} rows synced in total"
+                .format(PERSISTED_COUNT))
 
 
 def do_check():
     try:
-        pass
+        requests.get(BASE_URL + "/users", auth=("", API_KEY))
     except requests.exceptions.RequestException as e:
         logger.fatal("Error checking connection using {e.request.url}; "
                      "received status {e.response.status_code}: {e.response.test}"
@@ -243,29 +195,39 @@ def do_check():
 
 
 def main():
-    global QUIET
+    global API_KEY
+    global TENANT_ALIAS
+    global BASE_URL
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('func', choices=['check', 'sync'])
     parser.add_argument('-c', '--config', help='Config file', required=True)
     parser.add_argument('-s', '--state', help='State file')
+    parser.add_argument('-t', '--check', dest='check', action='store_true',
+                        help='Check connection only (no syncing)')
     parser.add_argument('-d', '--debug', dest='debug', action='store_true',
                         help='Sets the log level to DEBUG (default INFO)')
-    parser.add_argument('-q', '--quiet', dest='quiet', action='store_true',
-                        help='Do not output to stdout (no persisting)')
-    parser.set_defaults(debug=False, quiet=False)
+    parser.set_defaults(debug=False)
     args = parser.parse_args()
-
-    QUIET = args.quiet
 
     if args.debug:
         logger.setLevel(logging.DEBUG)
 
-    load_config(args.config)
-    if args.state:
-        load_state(args.state)
+    with open(config_file) as f:
+        config = json.load(f)
 
-    if args.func == "check":
+    API_KEY = config['api_key']
+    TENANT_ALIAS = config['tenant_alias']
+    BASE_URL = BASE_URL.format(alias=TENANT_ALIAS)
+
+    if args.state:
+        logger.info("Loading state from " + args.state)
+        with open(state_file) as f:
+            data = json.load(f)
+
+        state.update(data)
+        logger.info("State loaded. {}".format(state))
+
+    if args.check:
         do_check()
     else:
         do_sync()
