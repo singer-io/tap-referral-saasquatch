@@ -5,6 +5,7 @@ import datetime
 import json
 import os
 import sys
+import time
 
 import backoff
 import requests
@@ -35,7 +36,7 @@ logger = stitchstream.get_logger()
 def load_schema(entity):
     path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         "stream_referral_saasquatch",
-                        "{}.json".format(entity_name))
+                        "{}.json".format(entity))
     with open(path) as f:
         return json.load(f)
 
@@ -88,11 +89,9 @@ def stream_export(entity, export_id):
     headers = {'Content-Type': "application/json"}
     resp = requests.get(url, auth=auth, headers=headers, stream=True)
 
-    lines = [line.decode("utf-8") for line in r.iter_lines()]
-
     fields = None
     rows = []
-    for line in r.iter_lines():
+    for line in resp.iter_lines():
         line = line.decode("utf-8")
         split = line.split(",")
 
@@ -150,12 +149,8 @@ def sync_entity(entity):
     logger.info("{}: Sent schema".format(entity))
 
     logger.info("{}: Requesting export".format(entity))
-    try:
-        export_start = datetime.datetime.utcnow().strftime(DATETIME_FMT)
-        export_id = request_export(entity)
-    except Exception as e:
-        logger.fatal(e.message)
-        sys.exit(-1)
+    export_start = datetime.datetime.utcnow().strftime(DATETIME_FMT)
+    export_id = request_export(entity)
 
     logger.info("{}: Export ready".format(entity))
 
@@ -201,8 +196,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config', help='Config file', required=True)
     parser.add_argument('-s', '--state', help='State file')
-    parser.add_argument('-t', '--check', dest='check', action='store_true',
-                        help='Check connection only (no syncing)')
     parser.add_argument('-d', '--debug', dest='debug', action='store_true',
                         help='Sets the log level to DEBUG (default INFO)')
     parser.set_defaults(debug=False)
@@ -211,25 +204,22 @@ def main():
     if args.debug:
         logger.setLevel(logging.DEBUG)
 
-    with open(config_file) as f:
+    with open(args.config) as f:
         config = json.load(f)
 
     API_KEY = config['api_key']
     TENANT_ALIAS = config['tenant_alias']
-    BASE_URL = BASE_URL.format(alias=TENANT_ALIAS)
+    BASE_URL = BASE_URL.format(tenant_alias=TENANT_ALIAS)
 
     if args.state:
         logger.info("Loading state from " + args.state)
-        with open(state_file) as f:
+        with open(args.state) as f:
             data = json.load(f)
 
         state.update(data)
         logger.info("State loaded. {}".format(state))
 
-    if args.check:
-        do_check()
-    else:
-        do_sync()
+    do_sync()
 
 
 if __name__ == '__main__':
