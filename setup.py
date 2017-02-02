@@ -23,11 +23,8 @@ setup(name='stream-referral-saasquatch',
       packages=['stream_referral_saasquatch'],
       package_data = {
           'stream_referral_saasquatch': [
-              "accounts.json",
-              "balances.json",
-              "codes.json",
+              "reward_balances.json",
               "referrals.json",
-              "rewards.json",
               "users.json",
           ]
       }
