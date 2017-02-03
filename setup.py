@@ -3,13 +3,18 @@
 from setuptools import setup, find_packages
 import os.path
 
-setup(name='stream-referral-saasquatch',
-      version='0.1.0',
-      description='Streams Referral SaaSquatch data',
+
+with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'VERSION')) as f:
+    version = f.read().strip()
+
+
+setup(name='tap-referral-saasquatch',
+      version=version,
+      description='Taps Referral SaaSquatch data',
       author='Stitch',
       url='https://github.com/stitchstreams/stream-referral-saasquatch',
       classifiers=['Programming Language :: Python :: 3 :: Only'],
-      py_modules=['stream_referral_saasquatch'],
+      py_modules=['tap_referral_saasquatch'],
       install_requires=[
           'stitchstream-python>=0.5.0',
           'requests==2.12.4',
@@ -18,14 +23,18 @@ setup(name='stream-referral-saasquatch',
       ],
       entry_points='''
           [console_scripts]
-          stream-referral-saasquatch=stream_referral_saasquatch:main
+          tap-referral-saasquatch=tap_referral_saasquatch:main
       ''',
-      packages=['stream_referral_saasquatch'],
+      packages=['schemas'],
       package_data = {
-          'stream_referral_saasquatch': [
+          'schemas': [
               "reward_balances.json",
               "referrals.json",
               "users.json",
+          ],
+          '': [
+              'VERSION',
+              'LICENSE',
           ]
       }
 )
