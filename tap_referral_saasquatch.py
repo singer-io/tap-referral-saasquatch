@@ -196,13 +196,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config', help='Config file', required=True)
     parser.add_argument('-s', '--state', help='State file')
-    parser.add_argument('-d', '--debug', dest='debug', action='store_true',
-                        help='Sets the log level to DEBUG (default INFO)')
-    parser.set_defaults(debug=False)
     args = parser.parse_args()
-
-    if args.debug:
-        logger.setLevel(logging.DEBUG)
 
     with open(args.config) as f:
         config = json.load(f)
