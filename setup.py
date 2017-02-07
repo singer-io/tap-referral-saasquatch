@@ -25,16 +25,4 @@ setup(name='tap-referral-saasquatch',
           [console_scripts]
           tap-referral-saasquatch=tap_referral_saasquatch:main
       ''',
-      packages=['schemas'],
-      package_data = {
-          'schemas': [
-              "reward_balances.json",
-              "referrals.json",
-              "users.json",
-          ],
-          '': [
-              'VERSION',
-              'LICENSE',
-          ]
-      }
 )
