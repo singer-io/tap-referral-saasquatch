@@ -158,7 +158,7 @@ def sync_entity(entity):
     logger.info("{}: Got {} records".format(entity, len(rows)))
 
     for row in rows:
-        transformed_row = transform_row(row, schema)
+        transformed_row = transform_row(entity, row)
         stitchstream.write_record(entity, transformed_row)
         PERSISTED_COUNT += 1
 
