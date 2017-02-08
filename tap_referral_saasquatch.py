@@ -4,10 +4,7 @@ import argparse
 import datetime
 import json
 import os
-import sys
-import time
 
-import backoff
 import requests
 import stitchstream
 
@@ -142,12 +139,12 @@ def transform_row(entity, row):
             for field, value in row.items()}
 
 
-def sync_entity(entity):
+def sync_entity(entity, key_properties):
     global PERSISTED_COUNT
     logger.info("{}: Starting sync from {}".format(entity, state[entity]))
 
     schema = load_schema(entity)
-    stitchstream.write_schema(entity, schema)
+    stitchstream.write_schema(entity, schema, key_properties)
     logger.info("{}: Sent schema".format(entity))
 
     logger.info("{}: Requesting export".format(entity))
@@ -172,22 +169,12 @@ def sync_entity(entity):
 def do_sync():
     logger.info("Starting Referral Saasquatch sync")
 
-    sync_entity("users")
-    sync_entity("reward_balances")
-    sync_entity("referrals")
+    sync_entity("users", "id")
+    sync_entity("reward_balances", ["userId", "accountId"])
+    sync_entity("referrals", "id")
 
     logger.info("Completed Referral Saasquatch sync. {} rows synced in total"
                 .format(PERSISTED_COUNT))
-
-
-def do_check():
-    try:
-        requests.get(BASE_URL + "/users", auth=("", API_KEY))
-    except requests.exceptions.RequestException as e:
-        logger.fatal("Error checking connection using {e.request.url}; "
-                     "received status {e.response.status_code}: {e.response.test}"
-                     .format(e=e))
-        sys.exit(-1)
 
 
 def main():
