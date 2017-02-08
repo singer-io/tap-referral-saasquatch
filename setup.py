@@ -4,12 +4,8 @@ from setuptools import setup, find_packages
 import os.path
 
 
-with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'VERSION')) as f:
-    version = f.read().strip()
-
-
 setup(name='tap-referral-saasquatch',
-      version=version,
+      version='0.1.4',
       description='Taps Referral SaaSquatch data',
       author='Stitch',
       url='https://github.com/stitchstreams/tap-referral-saasquatch',
@@ -25,4 +21,12 @@ setup(name='tap-referral-saasquatch',
           [console_scripts]
           tap-referral-saasquatch=tap_referral_saasquatch:main
       ''',
+      packages=['tap_referral_saasquatch'],
+      package_data = {
+          'tap_referral_saasquatch': [
+              "referrals.json",
+              "reward_balances.json",
+              "users.json",
+          ]
+      }
 )
