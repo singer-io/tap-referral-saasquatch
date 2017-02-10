@@ -5,7 +5,7 @@ import os.path
 
 
 setup(name='tap-referral-saasquatch',
-      version='0.2.0',
+      version='0.2.1',
       description='Taps Referral SaaSquatch data',
       author='Stitch',
       url='https://github.com/stitchstreams/tap-referral-saasquatch',
