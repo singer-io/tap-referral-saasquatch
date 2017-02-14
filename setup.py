@@ -3,10 +3,10 @@
 from setuptools import setup, find_packages
 
 setup(name='tap-referral-saasquatch',
-      version='0.3.0',
-      description='Singerio tap for extracting data from the Referral SaaSquatch API',
+      version='0.4.0',
+      description='Singer.io tap for extracting data from the Referral SaaSquatch API',
       author='Stitch',
-      url='https://github.com/singer-io/tap-referral-saasquatch',
+      url='http://singer.io',
       classifiers=['Programming Language :: Python :: 3 :: Only'],
       py_modules=['tap_referral_saasquatch'],
       install_requires=[
