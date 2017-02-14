@@ -1,49 +1,34 @@
 #!/usr/bin/env python3
 
-import argparse
 import datetime
-import json
-import os
 import time
 
 import requests
-import stitchstream
+import stitchstream as singer
+from . import utils
 
-API_KEY = None
-TENANT_ALIAS = None
-BASE_URL = "https://app.referralsaasquatch.com/api/v1/{tenant_alias}"
-DATETIME_FMT = "%Y-%m-%dT%H:%M:%SZ"
-DEFAULT_START_DATE = datetime.datetime(2016, 1, 1).strftime(DATETIME_FMT)
-PERSISTED_COUNT = 0
 
-state = {
-    "users": DEFAULT_START_DATE,
-    "reward_balances": DEFAULT_START_DATE,
-    "referrals": DEFAULT_START_DATE,
+CONFIG = {
+    'base_url': "https://app.referralsaasquatch.com/api/v1/{}",
+    'default_start_date': utils.strftime(datetime.datetime.utcnow() - datetime.timedelta(days=365)),
+
+    # in config.json
+    'api_key': None,
+    'tenant_alias': None,
 }
-
+STATE = {}
 entity_export_types = {
     "users": "USER",
     "reward_balances": "REWARD_BALANCE",
     "referrals": "REFERRAL",
 }
 
-logger = stitchstream.get_logger()
-
-
-def load_schema(entity):
-    path = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "tap_referral_saasquatch",
-        "{}.json".format(entity))
-
-    with open(path) as f:
-        return json.load(f)
+logger = singer.get_logger()
 
 
 def export_ready(export_id):
-    url = BASE_URL + "/export/{}".format(export_id)
-    auth = ("", API_KEY)
+    url = CONFIG['base_url'].format(CONFIG['tenant_alias']) + "/export/{}".format(export_id)
+    auth = ("", CONFIG['api_key'])
     headers = {'Content-Type': "application/json"}
     resp = requests.get(url, auth=auth, headers=headers)
     result = resp.json()
@@ -51,15 +36,15 @@ def export_ready(export_id):
 
 
 def request_export(entity):
-    url = BASE_URL + "/export"
-    auth = ("", API_KEY)
+    url = CONFIG['base_url'].format(CONFIG['tenant_alias']) + "/export"
+    auth = ("", CONFIG['api_key'])
     headers = {'Content-Type': "application/json"}
     data = {
         "type": entity_export_types[entity],
         "format": "CSV",
         "name": "Stitch Streams {}:{}".format(entity, datetime.datetime.utcnow()),
         "params": {
-            "createdOrUpdatedSince": state[entity],
+            "createdOrUpdatedSince": STATE.get(entity, CONFIG['default_start_date']),
         },
     }
 
@@ -84,8 +69,8 @@ def request_export(entity):
 
 
 def stream_export(entity, export_id):
-    url = BASE_URL + "/export/{}/download".format(export_id)
-    auth = ("", API_KEY)
+    url = CONFIG['base_url'].format(CONFIG['tenant_alias']) + "/export/{}/download".format(export_id)
+    auth = ("", CONFIG['api_key'])
     headers = {'Content-Type': "application/json"}
     resp = requests.get(url, auth=auth, headers=headers, stream=True)
 
@@ -109,7 +94,7 @@ def transform_timestamp(value):
         return None
 
     dt = datetime.datetime.utcfromtimestamp(int(value) * 0.001)
-    return dt.strftime(DATETIME_FMT)
+    return utils.strftime(dt)
 
 
 TRANSFORMS = {
@@ -141,15 +126,15 @@ def transform_row(entity, row):
 
 
 def sync_entity(entity, key_properties):
-    global PERSISTED_COUNT
-    logger.info("{}: Starting sync from {}".format(entity, state[entity]))
+    start_date = STATE.get(entity, CONFIG['default_start_date'])
+    logger.info("{}: Starting sync from {}".format(entity, start_date))
 
-    schema = load_schema(entity)
-    stitchstream.write_schema(entity, schema, key_properties)
+    schema = utils.load_schema(entity)
+    singer.write_schema(entity, schema, key_properties)
     logger.info("{}: Sent schema".format(entity))
 
     logger.info("{}: Requesting export".format(entity))
-    export_start = datetime.datetime.utcnow().strftime(DATETIME_FMT)
+    export_start = utils.strftime(datetime.datetime.utcnow())
     export_id = request_export(entity)
 
     logger.info("{}: Export ready".format(entity))
@@ -159,11 +144,10 @@ def sync_entity(entity, key_properties):
 
     for row in rows:
         transformed_row = transform_row(entity, row)
-        stitchstream.write_record(entity, transformed_row)
-        PERSISTED_COUNT += 1
+        singer.write_record(entity, transformed_row)
 
-    state[entity] = export_start
-    stitchstream.write_state(state)
+    utils.update_state(STATE, "entity", export_start)
+    singer.write_state(STATE)
     logger.info("{}: State synced to {}".format(entity, export_start))
 
 
@@ -174,35 +158,14 @@ def do_sync():
     sync_entity("reward_balances", ["userId", "accountId"])
     sync_entity("referrals", "id")
 
-    logger.info("Completed Referral Saasquatch sync. {} rows synced in total"
-                .format(PERSISTED_COUNT))
+    logger.info("Sync complete")
 
 
 def main():
-    global API_KEY
-    global TENANT_ALIAS
-    global BASE_URL
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', help='Config file', required=True)
-    parser.add_argument('-s', '--state', help='State file')
-    args = parser.parse_args()
-
-    with open(args.config) as f:
-        config = json.load(f)
-
-    API_KEY = config['api_key']
-    TENANT_ALIAS = config['tenant_alias']
-    BASE_URL = BASE_URL.format(tenant_alias=TENANT_ALIAS)
-
+    args = utils.parse_args()
+    CONFIG.update(utils.load_json(args.config))
     if args.state:
-        logger.info("Loading state from " + args.state)
-        with open(args.state) as f:
-            data = json.load(f)
-
-        state.update(data)
-        logger.info("State loaded. {}".format(state))
-
+        STATE.update(utils.load_json(args.state))
     do_sync()
 
 
