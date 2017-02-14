@@ -4,7 +4,8 @@ import datetime
 import time
 
 import requests
-import stitchstream as singer
+import singer
+
 from . import utils
 
 

@@ -3,14 +3,14 @@
 from setuptools import setup, find_packages
 
 setup(name='tap-referral-saasquatch',
-      version='0.2.2',
-      description='Singer tap for Referral SaaSquatch data',
+      version='0.3.0',
+      description='Singerio tap for extracting data from the Referral SaaSquatch API',
       author='Stitch',
       url='https://github.com/singer-io/tap-referral-saasquatch',
       classifiers=['Programming Language :: Python :: 3 :: Only'],
       py_modules=['tap_referral_saasquatch'],
       install_requires=[
-          'stitchstream-python>=0.6.0',
+          'singer-python>=0.1.0',
           'requests==2.12.4',
       ],
       entry_points='''
