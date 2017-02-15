@@ -9,11 +9,8 @@ import singer
 from . import utils
 
 
+BASE_URL = "https://app.referralsaasquatch.com/api/v1/{}"
 CONFIG = {
-    'base_url': "https://app.referralsaasquatch.com/api/v1/{}",
-    'default_start_date': utils.strftime(datetime.datetime.utcnow() - datetime.timedelta(days=365)),
-
-    # in config.json
     'api_key': None,
     'tenant_alias': None,
 }
@@ -27,8 +24,15 @@ entity_export_types = {
 logger = singer.get_logger()
 
 
+def get_start(entity):
+    if entity not in STATE:
+        STATE[entity] = utils.strftime(datetime.datetime.utcnow() - datetime.timedelta(days=365))
+
+    return STATE[entity]
+
+
 def export_ready(export_id):
-    url = CONFIG['base_url'].format(CONFIG['tenant_alias']) + "/export/{}".format(export_id)
+    url = BASE_URL.format(CONFIG['tenant_alias']) + "/export/{}".format(export_id)
     auth = ("", CONFIG['api_key'])
     headers = {'Content-Type': "application/json"}
     resp = requests.get(url, auth=auth, headers=headers)
@@ -37,7 +41,7 @@ def export_ready(export_id):
 
 
 def request_export(entity):
-    url = CONFIG['base_url'].format(CONFIG['tenant_alias']) + "/export"
+    url = BASE_URL.format(CONFIG['tenant_alias']) + "/export"
     auth = ("", CONFIG['api_key'])
     headers = {'Content-Type': "application/json"}
     data = {
@@ -45,7 +49,7 @@ def request_export(entity):
         "format": "CSV",
         "name": "Stitch Streams {}:{}".format(entity, datetime.datetime.utcnow()),
         "params": {
-            "createdOrUpdatedSince": STATE.get(entity, CONFIG['default_start_date']),
+            "createdOrUpdatedSince": get_start(entity),
         },
     }
 
@@ -70,7 +74,7 @@ def request_export(entity):
 
 
 def stream_export(entity, export_id):
-    url = CONFIG['base_url'].format(CONFIG['tenant_alias']) + "/export/{}/download".format(export_id)
+    url = BASE_URL.format(CONFIG['tenant_alias']) + "/export/{}/download".format(export_id)
     auth = ("", CONFIG['api_key'])
     headers = {'Content-Type': "application/json"}
     resp = requests.get(url, auth=auth, headers=headers, stream=True)
@@ -94,8 +98,7 @@ def transform_timestamp(value):
     if not value:
         return None
 
-    dt = datetime.datetime.utcfromtimestamp(int(value) * 0.001)
-    return utils.strftime(dt)
+    return utils.strftime(datetime.datetime.utcfromtimestamp(int(value) * 0.001))
 
 
 TRANSFORMS = {
@@ -117,17 +120,15 @@ TRANSFORMS = {
 def transform_field(entity, field, value):
     if field in TRANSFORMS[entity]:
         return TRANSFORMS[entity][field](value)
-    else:
-        return value
+    return value
 
 
 def transform_row(entity, row):
-    return {field: transform_field(entity, field, value)
-            for field, value in row.items()}
+    return {field: transform_field(entity, field, value) for field, value in row.items()}
 
 
 def sync_entity(entity, key_properties):
-    start_date = STATE.get(entity, CONFIG['default_start_date'])
+    start_date = get_start(entity)
     logger.info("{}: Starting sync from {}".format(entity, start_date))
 
     schema = utils.load_schema(entity)
@@ -164,9 +165,14 @@ def do_sync():
 
 def main():
     args = utils.parse_args()
-    CONFIG.update(utils.load_json(args.config))
+
+    config = utils.load_json(args.config)
+    utils.check_config(config, ['api_key', 'tenant_alias'])
+    CONFIG.update(config)
+
     if args.state:
         STATE.update(utils.load_json(args.state))
+
     do_sync()
 
 
