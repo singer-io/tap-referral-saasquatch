@@ -148,7 +148,7 @@ def sync_entity(entity, key_properties):
         transformed_row = transform_row(entity, row)
         singer.write_record(entity, transformed_row)
 
-    utils.update_state(STATE, "entity", export_start)
+    utils.update_state(STATE, entity, export_start)
     singer.write_state(STATE)
     logger.info("{}: State synced to {}".format(entity, export_start))
 
