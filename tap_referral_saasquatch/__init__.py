@@ -13,6 +13,7 @@ BASE_URL = "https://app.referralsaasquatch.com/api/v1/{}"
 CONFIG = {
     'api_key': None,
     'tenant_alias': None,
+    'start_date': None,
 }
 STATE = {}
 entity_export_types = {
@@ -26,7 +27,7 @@ logger = singer.get_logger()
 
 def get_start(entity):
     if entity not in STATE:
-        STATE[entity] = utils.strftime(datetime.datetime.utcnow() - datetime.timedelta(days=365))
+        STATE[entity] = CONFIG['start_date']
 
     return STATE[entity]
 
@@ -167,7 +168,7 @@ def main():
     args = utils.parse_args()
 
     config = utils.load_json(args.config)
-    utils.check_config(config, ['api_key', 'tenant_alias'])
+    utils.check_config(config, ['api_key', 'tenant_alias', 'start_date'])
     CONFIG.update(config)
 
     if args.state:
