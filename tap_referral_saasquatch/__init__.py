@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import datetime
+import sys
 import time
 
 import requests
@@ -23,6 +24,7 @@ entity_export_types = {
 }
 
 logger = singer.get_logger()
+session = requests.Session()
 
 
 def get_start(entity):
@@ -54,7 +56,13 @@ def request_export(entity):
         },
     }
 
-    resp = requests.post(url, auth=auth, headers=headers, json=data)
+    req = requests.Request('POST', url, auth=auth, headers=headers, json=data).prepare()
+    logger.info("POST {} body={}".format(req.url, data))
+    resp = session.send(req)
+    if resp.status_code >= 400:
+        logger.error("POST {} [{} - {}]".format(req.url, resp.status_code, resp.content))
+        sys.exit(1)
+
     result = resp.json()
 
     if 'id' in result:
