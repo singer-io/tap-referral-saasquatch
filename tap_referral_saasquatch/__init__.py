@@ -39,6 +39,9 @@ def export_ready(export_id):
     url = BASE_URL.format(CONFIG['tenant_alias']) + "/export/{}".format(export_id)
     auth = ("", CONFIG['api_key'])
     headers = {'Content-Type': "application/json"}
+    if 'user_agent' in CONFIG:
+        headers['User-Agent'] = CONFIG['user_agent']
+
     resp = requests.get(url, auth=auth, headers=headers)
     result = resp.json()
     return result['status'] == 'COMPLETED'
@@ -53,6 +56,9 @@ def request_export(entity):
     url = BASE_URL.format(CONFIG['tenant_alias']) + "/export"
     auth = ("", CONFIG['api_key'])
     headers = {'Content-Type': "application/json"}
+    if 'user_agent' in CONFIG:
+        headers['User-Agent'] = CONFIG['user_agent']
+
     data = {
         "type": entity_export_types[entity],
         "format": "CSV",
