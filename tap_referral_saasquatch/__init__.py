@@ -4,6 +4,7 @@ import datetime
 import sys
 import time
 
+import backoff
 import requests
 import singer
 
@@ -43,6 +44,11 @@ def export_ready(export_id):
     return result['status'] == 'COMPLETED'
 
 
+@backoff.on_exception(backoff.expo,
+                      (requests.exceptions.RequestException),
+                      max_tries=5,
+                      giveup=lambda e: e.response is not None and 400 <= e.response.status_code < 500,
+                      factor=2)
 def request_export(entity):
     url = BASE_URL.format(CONFIG['tenant_alias']) + "/export"
     auth = ("", CONFIG['api_key'])
