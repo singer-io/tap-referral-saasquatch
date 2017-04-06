@@ -35,6 +35,10 @@ def get_start(entity):
     return STATE[entity]
 
 
+def load_schema(entity_name):
+    return utils.load_json(get_abs_path('schemas/{}.json'.format(stream.name)))
+
+
 def export_ready(export_id):
     url = BASE_URL.format(CONFIG['tenant_alias']) + "/export/{}".format(export_id)
     auth = ("", CONFIG['api_key'])
@@ -152,7 +156,7 @@ def sync_entity(entity, key_properties):
     start_date = get_start(entity)
     logger.info("{}: Starting sync from {}".format(entity, start_date))
 
-    schema = utils.load_schema(entity)
+    schema = load_schema(entity)
     singer.write_schema(entity, schema, key_properties)
     logger.info("{}: Sent schema".format(entity))
 
