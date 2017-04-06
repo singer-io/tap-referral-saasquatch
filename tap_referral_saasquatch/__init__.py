@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 
 import datetime
+import sys
 import time
 
+import backoff
 import requests
 import singer
 
 from . import utils
 
 
+BASE_URL = "https://app.referralsaasquatch.com/api/v1/{}"
 CONFIG = {
-    'base_url': "https://app.referralsaasquatch.com/api/v1/{}",
-    'default_start_date': utils.strftime(datetime.datetime.utcnow() - datetime.timedelta(days=365)),
-
-    # in config.json
     'api_key': None,
     'tenant_alias': None,
+    'start_date': None,
 }
 STATE = {}
 entity_export_types = {
@@ -25,31 +25,56 @@ entity_export_types = {
 }
 
 logger = singer.get_logger()
+session = requests.Session()
+
+
+def get_start(entity):
+    if entity not in STATE:
+        STATE[entity] = CONFIG['start_date']
+
+    return STATE[entity]
 
 
 def export_ready(export_id):
-    url = CONFIG['base_url'].format(CONFIG['tenant_alias']) + "/export/{}".format(export_id)
+    url = BASE_URL.format(CONFIG['tenant_alias']) + "/export/{}".format(export_id)
     auth = ("", CONFIG['api_key'])
     headers = {'Content-Type': "application/json"}
+    if 'user_agent' in CONFIG:
+        headers['User-Agent'] = CONFIG['user_agent']
+
     resp = requests.get(url, auth=auth, headers=headers)
     result = resp.json()
     return result['status'] == 'COMPLETED'
 
 
+@backoff.on_exception(backoff.expo,
+                      (requests.exceptions.RequestException),
+                      max_tries=5,
+                      giveup=lambda e: e.response is not None and 400 <= e.response.status_code < 500,
+                      factor=2)
 def request_export(entity):
-    url = CONFIG['base_url'].format(CONFIG['tenant_alias']) + "/export"
+    url = BASE_URL.format(CONFIG['tenant_alias']) + "/export"
     auth = ("", CONFIG['api_key'])
     headers = {'Content-Type': "application/json"}
+    if 'user_agent' in CONFIG:
+        headers['User-Agent'] = CONFIG['user_agent']
+
     data = {
         "type": entity_export_types[entity],
         "format": "CSV",
         "name": "Stitch Streams {}:{}".format(entity, datetime.datetime.utcnow()),
         "params": {
-            "createdOrUpdatedSince": STATE.get(entity, CONFIG['default_start_date']),
+            "createdOrUpdatedSince": get_start(entity),
         },
     }
 
-    resp = requests.post(url, auth=auth, headers=headers, json=data)
+    req = requests.Request('POST', url, auth=auth, headers=headers, json=data).prepare()
+    logger.info("POST {} body={}".format(req.url, data))
+    resp = session.send(req)
+    if resp.status_code >= 400:
+        logger.error("POST {} [{} - {}]".format(req.url, resp.status_code, resp.content))
+        sys.exit(1)
+
     result = resp.json()
 
     if 'id' in result:
@@ -70,7 +95,7 @@ def request_export(entity):
 
 
 def stream_export(entity, export_id):
-    url = CONFIG['base_url'].format(CONFIG['tenant_alias']) + "/export/{}/download".format(export_id)
+    url = BASE_URL.format(CONFIG['tenant_alias']) + "/export/{}/download".format(export_id)
     auth = ("", CONFIG['api_key'])
     headers = {'Content-Type': "application/json"}
     resp = requests.get(url, auth=auth, headers=headers, stream=True)
@@ -94,8 +119,7 @@ def transform_timestamp(value):
     if not value:
         return None
 
-    dt = datetime.datetime.utcfromtimestamp(int(value) * 0.001)
-    return utils.strftime(dt)
+    return utils.strftime(datetime.datetime.utcfromtimestamp(int(value) * 0.001))
 
 
 TRANSFORMS = {
@@ -117,17 +141,15 @@ TRANSFORMS = {
 def transform_field(entity, field, value):
     if field in TRANSFORMS[entity]:
         return TRANSFORMS[entity][field](value)
-    else:
-        return value
+    return value
 
 
 def transform_row(entity, row):
-    return {field: transform_field(entity, field, value)
-            for field, value in row.items()}
+    return {field: transform_field(entity, field, value) for field, value in row.items()}
 
 
 def sync_entity(entity, key_properties):
-    start_date = STATE.get(entity, CONFIG['default_start_date'])
+    start_date = get_start(entity)
     logger.info("{}: Starting sync from {}".format(entity, start_date))
 
     schema = utils.load_schema(entity)
@@ -147,7 +169,7 @@ def sync_entity(entity, key_properties):
         transformed_row = transform_row(entity, row)
         singer.write_record(entity, transformed_row)
 
-    utils.update_state(STATE, "entity", export_start)
+    utils.update_state(STATE, entity, export_start)
     singer.write_state(STATE)
     logger.info("{}: State synced to {}".format(entity, export_start))
 
@@ -164,9 +186,14 @@ def do_sync():
 
 def main():
     args = utils.parse_args()
-    CONFIG.update(utils.load_json(args.config))
+
+    config = utils.load_json(args.config)
+    utils.check_config(config, ['api_key', 'tenant_alias', 'start_date'])
+    CONFIG.update(config)
+
     if args.state:
         STATE.update(utils.load_json(args.state))
+
     do_sync()
 
 
