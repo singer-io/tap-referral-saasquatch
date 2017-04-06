@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import datetime
+import os
 import sys
 import time
 
@@ -40,7 +41,7 @@ def get_abs_path(path):
 
 
 def load_schema(entity_name):
-    return utils.load_json(get_abs_path('schemas/{}.json'.format(stream.name)))
+    return utils.load_json(get_abs_path('schemas/{}.json'.format(entity_name)))
 
 
 def export_ready(export_id):
