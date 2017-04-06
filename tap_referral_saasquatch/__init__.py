@@ -35,6 +35,10 @@ def get_start(entity):
     return STATE[entity]
 
 
+def get_abs_path(path):
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
+
+
 def load_schema(entity_name):
     return utils.load_json(get_abs_path('schemas/{}.json'.format(stream.name)))
 
