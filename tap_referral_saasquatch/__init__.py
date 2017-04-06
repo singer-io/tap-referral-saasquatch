@@ -8,7 +8,7 @@ import backoff
 import requests
 import singer
 
-from . import utils
+from singer import utils
 
 
 BASE_URL = "https://app.referralsaasquatch.com/api/v1/{}"
@@ -185,14 +185,11 @@ def do_sync():
 
 
 def main():
-    args = utils.parse_args()
-
-    config = utils.load_json(args.config)
-    utils.check_config(config, ['api_key', 'tenant_alias', 'start_date'])
-    CONFIG.update(config)
+    args = utils.parse_args(['api_key', 'tenant_alias', 'start_date'])
+    CONFIG.update(args.config)
 
     if args.state:
-        STATE.update(utils.load_json(args.state))
+        STATE.update(args.state)
 
     do_sync()
 
