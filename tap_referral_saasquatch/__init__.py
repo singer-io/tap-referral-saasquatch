@@ -193,7 +193,7 @@ def do_sync():
     logger.info("Sync complete")
 
 
-def main():
+def main_impl():
     args = utils.parse_args(['api_key', 'tenant_alias', 'start_date'])
     CONFIG.update(args.config)
 
@@ -201,6 +201,14 @@ def main():
         STATE.update(args.state)
 
     do_sync()
+
+
+def main():
+    try:
+        main_impl()
+    except Exception as exc:
+        LOGGER.critical(exc)
+        raise exc
 
 
 if __name__ == '__main__':
