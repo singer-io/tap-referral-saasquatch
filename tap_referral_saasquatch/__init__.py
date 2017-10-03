@@ -81,7 +81,7 @@ def request_export(entity):
     logger.info("POST {} body={}".format(req.url, data))
     resp = session.send(req)
     if resp.status_code >= 400:
-        logger.error("POST {} [{} - {}]".format(req.url, resp.status_code, resp.content))
+        logger.critical("Error submitting request for export: POST {}: [{} - {}]".format(req.url, resp.status_code, resp.content))
         sys.exit(1)
 
     result = resp.json()
