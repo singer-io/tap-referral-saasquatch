@@ -186,7 +186,7 @@ def sync_entity(entity, key_properties):
 def do_sync():
     logger.info("Starting Referral Saasquatch sync")
 
-    sync_entity("users", "id")
+    sync_entity("users", ["id", "accountId"])
     sync_entity("reward_balances", ["userId", "accountId"])
     sync_entity("referrals", "id")
 
