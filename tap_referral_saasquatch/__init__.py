@@ -207,7 +207,7 @@ def main():
     try:
         main_impl()
     except Exception as exc:
-        LOGGER.critical(exc)
+        logger.critical(exc)
         raise exc
 
 
