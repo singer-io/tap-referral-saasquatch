@@ -2,10 +2,12 @@
   "type": "object",
   "properties": {
     "userId": {
-      "type": "string"
+      "type": "string",
+      "key": true
     },
     "accountId": {
-      "type": "string"
+      "type": "string",
+      "key": true
     },
     "type": {
       "type": "string"
