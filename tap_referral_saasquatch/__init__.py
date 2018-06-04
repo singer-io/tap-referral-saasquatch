@@ -8,6 +8,7 @@ import time
 import backoff
 import requests
 import singer
+import csv
 
 from singer import utils
 
@@ -109,17 +110,14 @@ def stream_export(entity, export_id):
     headers = {'Content-Type': "application/json"}
     resp = requests.get(url, auth=auth, headers=headers, stream=True)
 
-    fields = None
     rows = []
-    for line in resp.iter_lines():
-        line = line.decode("utf-8")
-        split = line.split(",")
+    f = (line.decode('utf-8') for line in resp.iter_lines())
+    linereader = csv.reader(f)
+    fields = next(linereader)
 
-        if not fields:
-            fields = split
-        else:
-            row = dict(zip(fields, split))
-            rows.append(row)
+    for row in linereader:
+        row = dict(zip(fields, row))
+        rows.append(row)
 
     return rows
 
