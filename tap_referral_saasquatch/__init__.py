@@ -4,6 +4,7 @@ import datetime
 import os
 import sys
 import time
+import pytz
 
 import backoff
 import requests
@@ -11,6 +12,8 @@ import singer
 import csv
 
 from singer import utils
+import signal
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
 
 BASE_URL = "https://app.referralsaasquatch.com/api/v1/{}"
@@ -29,6 +32,7 @@ entity_export_types = {
 logger = singer.get_logger()
 session = requests.Session()
 
+ITER_CHUNK_SIZE = 512
 
 def get_start(entity):
     if entity not in STATE:
@@ -111,7 +115,7 @@ def stream_export(entity, export_id):
     resp = requests.get(url, auth=auth, headers=headers, stream=True)
 
     rows = []
-    f = (line.decode('utf-8') for line in resp.iter_lines())
+    f = (line.decode('utf-8') for line in iter_lines(resp))
     linereader = csv.reader(f)
     fields = next(linereader)
 
@@ -121,12 +125,48 @@ def stream_export(entity, export_id):
 
     return rows
 
+def iter_lines(response, chunk_size=ITER_CHUNK_SIZE, decode_unicode=None, delimiter=None):
+    """This funcitoin is derived from Response.iter_lines in python requests library
+
+        .. note:: This method is not reentrant safe.
+        """
+    pending = None
+    carriage_return = u'\r' if decode_unicode else b'\r'
+    line_feed = u'\n' if decode_unicode else b'\n'
+    last_chunk_ends_with_cr = False
+
+    for chunk in response.iter_content(chunk_size=chunk_size, decode_unicode=decode_unicode):
+
+        if pending is not None:
+            chunk = pending + chunk
+
+        if delimiter:
+            lines = chunk.split(delimiter)
+        else:
+            skip_first_char = last_chunk_ends_with_cr and chunk.startswith(line_feed)
+            last_chunk_ends_with_cr = chunk.endswith(carriage_return)
+            if skip_first_char:
+                chunk = chunk[1:]
+                if not chunk:
+                    continue
+            lines = chunk.splitlines()
+
+        if lines and lines[-1] and chunk and lines[-1][-1] == chunk[-1]:
+            pending = lines.pop()
+        else:
+            pending = None
+
+        for line in lines:
+            yield line
+
+    if pending is not None:
+        yield pending
 
 def transform_timestamp(value):
     if not value:
         return None
 
-    return utils.strftime(datetime.datetime.utcfromtimestamp(int(value) * 0.001))
+    return utils.strftime(datetime.datetime.utcfromtimestamp(int(value) * 0.001).replace(tzinfo=pytz.utc))
 
 
 TRANSFORMS = {
@@ -164,7 +204,7 @@ def sync_entity(entity, key_properties):
     logger.info("{}: Sent schema".format(entity))
 
     logger.info("{}: Requesting export".format(entity))
-    export_start = utils.strftime(datetime.datetime.utcnow())
+    export_start = utils.strftime(datetime.datetime.utcnow().replace(tzinfo=pytz.utc))
     export_id = request_export(entity)
 
     logger.info("{}: Export ready".format(entity))
