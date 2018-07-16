@@ -12,8 +12,6 @@ import singer
 import csv
 
 from singer import utils
-import signal
-signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
 
 BASE_URL = "https://app.referralsaasquatch.com/api/v1/{}"
@@ -32,7 +30,6 @@ entity_export_types = {
 logger = singer.get_logger()
 session = requests.Session()
 
-ITER_CHUNK_SIZE = 512
 
 def get_start(entity):
     if entity not in STATE:
@@ -125,36 +122,78 @@ def stream_export(entity, export_id):
 
     return rows
 
-def iter_lines(response, chunk_size=ITER_CHUNK_SIZE, decode_unicode=None, delimiter=None):
-    """This funcitoin is derived from Response.iter_lines in python requests library
-
+def iter_lines(response, chunk_size=requests.models.ITER_CHUNK_SIZE, decode_unicode=None, delimiter=None):
+    """This funcitoin is derived from 
+        https://github.com/requests/requests/blob/9c6bd54b44c0b05c6907522e8d9998a87b69c1cd/requests/models.py#L782
+        Note: when the requests 3.0 is released, we could simply use their build-in Response.iter_lines() function,
+        and this function could be removed.
+        """
+    """Iterates over the response data, one line at a time.  When
+        stream=True is set on the request, this avoids reading the
+        content at once into memory for large responses.
         .. note:: This method is not reentrant safe.
         """
-    pending = None
     carriage_return = u'\r' if decode_unicode else b'\r'
     line_feed = u'\n' if decode_unicode else b'\n'
+
+    pending = None
     last_chunk_ends_with_cr = False
 
-    for chunk in response.iter_content(chunk_size=chunk_size, decode_unicode=decode_unicode):
+    for chunk in response.iter_content(chunk_size=chunk_size,
+                                    decode_unicode=decode_unicode):
+        # Skip any null responses: if there is pending data it is necessarily an
+        # incomplete chunk, so if we don't have more data we don't want to bother
+        # trying to get it. Unconsumed pending data will be yielded anyway in the
+        # end of the loop if the stream ends.
+        if not chunk:
+            continue
 
+        # Consume any pending data
         if pending is not None:
             chunk = pending + chunk
+            pending = None
 
+        # Either split on a line, or split on a specified delimiter
         if delimiter:
             lines = chunk.split(delimiter)
         else:
+            # Python splitlines() supports the universal newline (PEP 278).
+            # That means, '\r', '\n', and '\r\n' are all treated as end of
+            # line. If the last chunk ends with '\r', and the current chunk
+            # starts with '\n', they should be merged and treated as only
+            # *one* new line separator '\r\n' by splitlines().
+            # This rule only applies when splitlines() is used.
+
+            # The last chunk ends with '\r', so the '\n' at chunk[0]
+            # is just the second half of a '\r\n' pair rather than a
+            # new line break. Just skip it.
             skip_first_char = last_chunk_ends_with_cr and chunk.startswith(line_feed)
             last_chunk_ends_with_cr = chunk.endswith(carriage_return)
             if skip_first_char:
                 chunk = chunk[1:]
+                # it's possible that after stripping the '\n' then chunk becomes empty
                 if not chunk:
                     continue
             lines = chunk.splitlines()
 
-        if lines and lines[-1] and chunk and lines[-1][-1] == chunk[-1]:
+        # Calling `.split(delimiter)` will always end with whatever text
+        # remains beyond the delimiter, or '' if the delimiter is the end
+        # of the text.  On the other hand, `.splitlines()` doesn't include
+        # a '' if the text ends in a line delimiter.
+        #
+        # For example:
+        #
+        #     'abc\ndef\n'.split('\n')  ~> ['abc', 'def', '']
+        #     'abc\ndef\n'.splitlines() ~> ['abc', 'def']
+        #
+        # So if we have a specified delimiter, we always pop the final
+        # item and prepend it to the next chunk.
+        #
+        # If we're using `splitlines()`, we only do this if the chunk
+        # ended midway through a line.
+        incomplete_line = lines[-1] and lines[-1][-1] == chunk[-1]
+        if delimiter or incomplete_line:
             pending = lines.pop()
-        else:
-            pending = None
 
         for line in lines:
             yield line
