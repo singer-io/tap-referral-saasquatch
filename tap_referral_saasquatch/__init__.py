@@ -122,12 +122,12 @@ def stream_export(entity, export_id):
 
     return rows
 
+"""This funcitoin is derived from 
+    https://github.com/requests/requests/blob/9c6bd54b44c0b05c6907522e8d9998a87b69c1cd/requests/models.py#L782
+    Note: when the requests 3.0 is released, we could simply use their build-in Response.iter_lines() function,
+    and this function could be removed.
+    """
 def iter_lines(response, chunk_size=requests.models.ITER_CHUNK_SIZE, decode_unicode=None, delimiter=None):
-    """This funcitoin is derived from 
-        https://github.com/requests/requests/blob/9c6bd54b44c0b05c6907522e8d9998a87b69c1cd/requests/models.py#L782
-        Note: when the requests 3.0 is released, we could simply use their build-in Response.iter_lines() function,
-        and this function could be removed.
-        """
     """Iterates over the response data, one line at a time.  When
         stream=True is set on the request, this avoids reading the
         content at once into memory for large responses.
@@ -205,7 +205,7 @@ def transform_timestamp(value):
     if not value:
         return None
 
-    return utils.strftime(datetime.datetime.utcfromtimestamp(int(value) * 0.001).replace(tzinfo=pytz.utc))
+    return utils.strftime(datetime.datetime.fromtimestamp(int(value) * 0.001, tz=pytz.utc))
 
 
 TRANSFORMS = {
@@ -243,7 +243,7 @@ def sync_entity(entity, key_properties):
     logger.info("{}: Sent schema".format(entity))
 
     logger.info("{}: Requesting export".format(entity))
-    export_start = utils.strftime(datetime.datetime.utcnow().replace(tzinfo=pytz.utc))
+    export_start = utils.strftime(utils.now())
     export_id = request_export(entity)
 
     logger.info("{}: Export ready".format(entity))
