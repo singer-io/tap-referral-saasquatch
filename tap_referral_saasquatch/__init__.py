@@ -122,11 +122,11 @@ def stream_export(entity, export_id):
 
     return rows
 
-    # This funcitoin is derived from 
-    # https://github.com/requests/requests/blob/9c6bd54b44c0b05c6907522e8d9998a87b69c1cd/requests/models.py#L782
-    # Note: when the requests 3.0 is released, we could simply use their build-in Response.iter_lines() function,
-    # and this function could be removed.
-    
+# This funcitoin is derived from 
+# https://github.com/requests/requests/blob/9c6bd54b44c0b05c6907522e8d9998a87b69c1cd/requests/models.py#L782
+# Note: when the requests 3.0 is released, we could simply use their
+# build-in Response.iter_lines() function,and this function could be
+# removed.
 def iter_lines(response, chunk_size=requests.models.ITER_CHUNK_SIZE, decode_unicode=None, delimiter=None):
     """Iterates over the response data, one line at a time.  When
         stream=True is set on the request, this avoids reading the
