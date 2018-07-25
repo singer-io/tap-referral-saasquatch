@@ -10,10 +10,10 @@ setup(name='tap-referral-saasquatch',
       classifiers=['Programming Language :: Python :: 3 :: Only'],
       py_modules=['tap_referral_saasquatch'],
       install_requires=[
-          'singer-python==1.2.0',
-          'requests==2.12.4',
+          'singer-python==5.0.15',
+          'requests==2.18.4',
           'backoff==1.3.2',
-          'pytz==2018.04'
+          'pytz==2018.4'
       ],
       entry_points='''
           [console_scripts]
