@@ -204,7 +204,7 @@ def transform_timestamp(value):
     if not value:
         return None
 
-    return utils.strftime(datetime.datetime.fromtimestamp(int(value) * 0.001, tz=pytz.utc))
+    return utils.strftime(datetime.datetime.utcfromtimestamp(int(value) * 0.001).replace(tzinfo=pytz.utc))
 
 
 TRANSFORMS = {
@@ -242,7 +242,7 @@ def sync_entity(entity, key_properties):
     logger.info("{}: Sent schema".format(entity))
 
     logger.info("{}: Requesting export".format(entity))
-    export_start = utils.strftime(utils.now())
+    export_start = utils.strftime(datetime.datetime.utcnow().replace(tzinfo=pytz.utc))
     export_id = request_export(entity)
 
     logger.info("{}: Export ready".format(entity))
