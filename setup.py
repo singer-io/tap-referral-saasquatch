@@ -13,6 +13,7 @@ setup(name='tap-referral-saasquatch',
           'singer-python==1.2.0',
           'requests==2.12.4',
           'backoff==1.3.2',
+          'pytz==2018.04'
       ],
       entry_points='''
           [console_scripts]
