@@ -5,6 +5,9 @@
       "type": "string",
       "key": true
     },
+    "programId": {
+      "type": "string"
+    },
     "referredUser": {
       "type": "string"
     },
@@ -30,6 +33,17 @@
       "type": "string"
     },
     "dateReferralStarted": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "dateConverted": {
       "anyOf": [
         {
           "type": "string",
