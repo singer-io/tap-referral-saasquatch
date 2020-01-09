@@ -219,6 +219,7 @@ TRANSFORMS = {
         "dateReferralPaid": transform_timestamp,
         "dateReferralEnded": transform_timestamp,
         "dateModerated": transform_timestamp,
+        "dateConverted": transform_timestamp,
     },
 }
 
