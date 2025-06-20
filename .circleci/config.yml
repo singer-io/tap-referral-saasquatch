@@ -16,7 +16,7 @@ jobs:
           name: 'JSON Validator'
           command: |
             source /usr/local/share/virtualenvs/tap-tester/bin/activate
-            stitch-validate-json tap-referral-saasquatch/schemas/*.json
+            stitch-validate-json tap_referral_saasquatch/schemas/*.json
       - run:
           name: 'pylint'
           command: |
