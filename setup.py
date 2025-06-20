@@ -8,7 +8,7 @@ setup(name='tap-referral-saasquatch',
       author='Stitch',
       url='https://singer.io',
       classifiers=['Programming Language :: Python :: 3 :: Only'],
-      py_modules=['tap_referral_saasquatch'],
+      py_modules=['tap-referral-saasquatch'],
       install_requires=[
           'singer-python==6.1.1',
           'requests==2.32.4',
@@ -22,11 +22,11 @@ setup(name='tap-referral-saasquatch',
       },
       entry_points='''
           [console_scripts]
-          tap-referral-saasquatch=tap_referral_saasquatch:main
+          tap-referral-saasquatch=tap-referral-saasquatch:main
       ''',
-      packages=['tap_referral_saasquatch'],
+      packages=['tap-referral-saasquatch'],
       package_data = {
-          'tap_referral_saasquatch/schemas': [
+          'tap-referral-saasquatch/schemas': [
               "referrals.json",
               "reward_balances.json",
               "users.json",
