@@ -12,6 +12,17 @@ jobs:
             source /usr/local/share/virtualenvs/tap-referral-saasquatch/bin/activate
             pip install -U 'pip<19.2' 'setuptools<51.0.0'
             pip install .[dev]
+      - run:
+          name: 'JSON Validator'
+          command: |
+            source /usr/local/share/virtualenvs/tap-tester/bin/activate
+            stitch-validate-json tap-referral-saasquatch/schemas/*.json
+      - run:
+          name: 'pylint'
+          command: |
+            source /usr/local/share/virtualenvs/tap-referral-saasquatch/bin/activate
+            pip install pylint
+            pylint tap-referral-saasquatch -d C,R,W
 
 workflows:
   version: 2
