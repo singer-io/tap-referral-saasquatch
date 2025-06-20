@@ -2,13 +2,13 @@
 
 from setuptools import setup, find_packages
 
-setup(name='tap-referral-saasquatch',
+setup(name='tap_referral_saasquatch',
       version='1.0.6',
       description='Singer.io tap for extracting data from the Referral SaaSquatch API',
       author='Stitch',
       url='https://singer.io',
       classifiers=['Programming Language :: Python :: 3 :: Only'],
-      py_modules=['tap-referral-saasquatch'],
+      py_modules=['tap_referral_saasquatch'],
       install_requires=[
           'singer-python==6.1.1',
           'requests==2.32.4',
@@ -22,11 +22,11 @@ setup(name='tap-referral-saasquatch',
       },
       entry_points='''
           [console_scripts]
-          tap-referral-saasquatch=tap-referral-saasquatch:main
+          tap_referral_saasquatch=tap_referral_saasquatch:main
       ''',
-      packages=['tap-referral-saasquatch'],
+      packages=['tap_referral_saasquatch'],
       package_data = {
-          'tap-referral-saasquatch/schemas': [
+          'tap_referral_saasquatch/schemas': [
               "referrals.json",
               "reward_balances.json",
               "users.json",
