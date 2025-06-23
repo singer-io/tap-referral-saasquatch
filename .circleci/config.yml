@@ -22,7 +22,7 @@ jobs:
           command: |
             source /usr/local/share/virtualenvs/tap-referral-saasquatch/bin/activate
             pip install pylint
-            pylint tap-referral-saasquatch -d C,R,W
+            pylint tap_referral_saasquatch -d C,R,W
 
 workflows:
   version: 2
