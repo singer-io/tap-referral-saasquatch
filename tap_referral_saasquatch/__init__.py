@@ -271,7 +271,8 @@ def do_sync():
     sync_entity("referrals", "id")
 
     logger.info("Sync complete")
-    
+
+
 def do_discover():
     logger.info("Starting discovery")
     catalog = discover()
@@ -285,7 +286,7 @@ def main_impl():
 
     if args.state:
         STATE.update(args.state)
-        
+
     if args.discover:
         do_discover()
     else:

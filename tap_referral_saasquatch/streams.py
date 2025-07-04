@@ -17,8 +17,8 @@ class Users:
     key_properties = ["id"]
     replication_keys = "dateCreated"
     replication_method = "INCREMENTAL"
-    
-    
+
+
 STREAMS = {
     "referrals": Referrals,
     "reward_balances": RewardBalance,
