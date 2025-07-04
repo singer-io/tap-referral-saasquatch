@@ -2,90 +2,54 @@
   "type": "object",
   "properties": {
     "id": {
-      "type": "string",
-      "key": true
+      "type": ["null", "string"]
     },
     "programId": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "referredUser": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "referredAccount": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "referredReward": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "referredModerationStatus": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "referrerUser": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "referrerAccount": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "referrerReward": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "referrerModerationStatus": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "dateReferralStarted": {
-      "anyOf": [
-        {
-          "type": "string",
-          "format": "date-time"
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "type": ["null", "string"],
+      "format": "date-time"
     },
     "dateConverted": {
-      "anyOf": [
-        {
-          "type": "string",
-          "format": "date-time"
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "type": ["null", "string"],
+      "format": "date-time"
     },
     "dateReferralPaid": {
-      "anyOf": [
-        {
-          "type": "string",
-          "format": "date-time"
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "type": ["null", "string"],
+      "format": "date-time"
     },
     "dateReferralEnded": {
-      "anyOf": [
-        {
-          "type": "string",
-          "format": "date-time"
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "type": ["null", "string"],
+      "format": "date-time"
     },
     "dateModerated": {
-      "anyOf": [
-        {
-          "type": "string",
-          "format": "date-time"
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "type": ["null", "string"],
+      "format": "date-time"
     }
   }
 }
