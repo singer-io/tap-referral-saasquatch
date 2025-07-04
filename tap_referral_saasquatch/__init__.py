@@ -16,7 +16,6 @@ from singer import utils
 from tap_referral_saasquatch.discover import discover
 
 
-
 BASE_URL = "https://app.referralsaasquatch.com/api/v1/{}"
 CONFIG = {
     'api_key': None,
