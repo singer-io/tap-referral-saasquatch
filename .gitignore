@@ -80,6 +80,7 @@ celerybeat-schedule
 
 # virtualenv
 venv/
+.venv/
 ENV/
 
 # Spyder project settings
@@ -96,3 +97,4 @@ ENV/
 env.sh
 config.json
 .autoenv.zsh
+catalog.json

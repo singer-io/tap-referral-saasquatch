@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import pytz
+import json
 
 import backoff
 import requests
@@ -12,6 +13,9 @@ import singer
 import csv
 
 from singer import utils
+from singer.catalog import Catalog, CatalogEntry
+from singer.schema import Schema
+from tap_referral_saasquatch.streams import STREAMS
 
 
 BASE_URL = "https://app.referralsaasquatch.com/api/v1/{}"
@@ -280,9 +284,39 @@ def main_impl():
     do_sync()
 
 
+def discover():
+    """Emit the Singer catalog based on stream definitions in streams.py."""
+
+    entries = []
+
+    for stream_name, stream_class in STREAMS.items():
+        try:
+            entry = CatalogEntry(
+                stream=stream_name,
+                tap_stream_id=stream_name,
+                schema=Schema(stream_class.schema),
+                metadata=[],
+                key_properties=stream_class.key_properties
+            )
+            entries.append(entry)
+        except Exception as e:
+            logger.error(f"Failed to build catalog entry for stream '{stream_name}': {e}")
+            raise
+
+    catalog = Catalog(entries)
+    json.dump(catalog.to_dict(), sys.stdout, indent=2)
+    logger.info("Discovery complete.")
+
+
 def main():
     try:
-        main_impl()
+        args = singer.utils.parse_args(
+        required_config_keys=CONFIG)
+        
+        if args.discover:
+            discover()
+        else:
+            main_impl()
     except Exception as exc:
         logger.critical(exc)
         raise exc
