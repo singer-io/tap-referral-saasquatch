@@ -12,6 +12,8 @@ import singer
 import csv
 
 from singer import utils
+from singer.catalog import Catalog, CatalogEntry
+from singer.schema import Schema
 
 
 BASE_URL = "https://app.referralsaasquatch.com/api/v1/{}"
@@ -279,10 +281,50 @@ def main_impl():
 
     do_sync()
 
+def discover():
+    schemas_folder = get_abs_path('schemas')
+    streams = []
+
+    for filename in os.listdir(schemas_folder):
+        if filename.endswith('.json'):
+            stream_id = filename.replace('.json', '')
+            schema_dict = load_schema(stream_id)
+            schema = Schema.from_dict(schema_dict)
+
+            stream_metadata = []
+            key_properties = []
+
+            streams.append(
+                CatalogEntry(
+                    tap_stream_id=stream_id,
+                    stream=stream_id,
+                    schema=schema,
+                    key_properties=key_properties,
+                    metadata=stream_metadata,
+                    replication_key=None,
+                    is_view=None,
+                    database=None,
+                    table=None,
+                    row_count=None,
+                    stream_alias=None,
+                    replication_method=None,
+                )
+            )
+
+    return Catalog(streams)
+
 
 def main():
     try:
-        main_impl()
+        args = singer.utils.parse_args(required_config_keys=CONFIG)
+        
+        if args.discover:
+            logger.info("Started discover mode")
+            catalog = discover()
+            catalog.dump()
+            logger.info("Finished discover mode")
+        else:
+            main_impl()
     except Exception as exc:
         logger.critical(exc)
         raise exc
