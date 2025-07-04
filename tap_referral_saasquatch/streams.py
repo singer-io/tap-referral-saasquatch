@@ -5,8 +5,8 @@ class Referrals:
     replication_method = "INCREMENTAL"
 
 
-class RewardBalance:
-    name = "reward_balance"
+class RewardBalances:
+    name = "reward_balances"
     key_properties = ["userId"]
     replication_keys = None
     replication_method = "INCREMENTAL"
@@ -21,6 +21,6 @@ class Users:
 
 STREAMS = {
     "referrals": Referrals,
-    "reward_balances": RewardBalance,
+    "reward_balances": RewardBalances,
     "users": Users
 }
