@@ -12,7 +12,7 @@ import singer
 import csv
 import json
 
-from singer import utils
+from singer import (utils, metadata, write_record)
 from tap_referral_saasquatch.discover import discover
 
 
@@ -262,14 +262,28 @@ def sync_entity(entity, key_properties):
     logger.info("{}: State synced to {}".format(entity, export_start))
 
 
-def do_sync():
+def is_selected(stream_metadata):
+        return metadata.get(stream_metadata, (), "selected")
+
+
+def do_sync(catalog: singer.Catalog):
     logger.info("Starting Referral Saasquatch sync")
-
-    sync_entity("users", ["id", "accountId"])
-    sync_entity("reward_balances", ["userId", "accountId"])
-    sync_entity("referrals", "id")
-
-    logger.info("Sync complete")
+    streams_to_sync = []
+    for stream in catalog.get_selected_streams(STATE):
+        streams_to_sync.append(stream.stream)
+            
+    with singer.Transformer() as transformer:
+        for stream_name in streams_to_sync:
+            meta_data = metadata.to_map(catalog.metadata)
+            export_id = request_export(stream_name)
+            rows = stream_export(stream_name, export_id)
+            catalog_stream = catalog.get_stream(stream_name)
+            for record in rows:
+                transformed_record = transformer.transform(
+                    record, catalog_stream.schema.to_dict(), meta_data
+                )
+                if is_selected(meta_data):
+                    write_record(stream_name, transformed_record)
 
 
 def do_discover():
@@ -288,8 +302,8 @@ def main_impl():
 
     if args.discover:
         do_discover()
-    else:
-        do_sync()
+    elif args.catalog:
+        do_sync(catalog=args.catalog)
 
 def main():
     try:

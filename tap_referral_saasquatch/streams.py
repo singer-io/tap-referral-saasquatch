@@ -7,14 +7,14 @@ class Referrals:
 
 class RewardBalances:
     name = "reward_balances"
-    key_properties = ["userId"]
+    key_properties = ["userId", "accountId"]
     replication_keys = None
     replication_method = "INCREMENTAL"
 
 
 class Users:
     name = "users"
-    key_properties = ["id"]
+    key_properties = ["id", "accountId"]
     replication_keys = "dateCreated"
     replication_method = "INCREMENTAL"
 

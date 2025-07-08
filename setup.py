@@ -18,6 +18,7 @@ setup(name='tap_referral_saasquatch',
       extras_require={
         'dev': [
             'pylint==2.4.4',
+            'pytest==8.4.1'
         ]
       },
       entry_points='''
