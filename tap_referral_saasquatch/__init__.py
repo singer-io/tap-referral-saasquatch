@@ -266,7 +266,7 @@ def is_selected(stream_metadata):
         return metadata.get(stream_metadata, (), "selected")
 
 
-def do_sync(catalog: singer.Catalog):
+def do_sync(catalog):
     logger.info("Starting Referral Saasquatch sync")
     streams_to_sync = []
     for stream in catalog.get_selected_streams(STATE):

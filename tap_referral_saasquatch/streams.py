@@ -9,7 +9,7 @@ class RewardBalances:
     name = "reward_balances"
     key_properties = ["userId", "accountId"]
     replication_keys = None
-    replication_method = "INCREMENTAL"
+    replication_method = "FULL_TABLE"
 
 
 class Users:
