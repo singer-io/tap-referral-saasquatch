@@ -45,7 +45,6 @@ def test_do_sync(mock_transformer_cls, mock_metadata_map, mock_write_record,
 
     do_sync(mock_catalog)
 
-    # Verify export and stream were called correctly
     mock_request_export.assert_called_once_with("users")
     mock_stream_export.assert_called_once_with("users", "fake_export_id")
     assert mock_write_record.call_count == 3
@@ -54,12 +53,11 @@ def test_do_sync(mock_transformer_cls, mock_metadata_map, mock_write_record,
     mock_write_record.assert_any_call("users", {"id": "2", "name": "Bob", "dateCreated": "2025-07-02T00:00:00Z"})
     mock_write_record.assert_any_call("users", {"id": "3", "name": "Charlie", "dateCreated": "2025-06-30T00:00:00Z"})
 
-    # ✅ Assert state was updated with latest replication key
+    # Assert state was updated with latest replication key
     mock_update_state.assert_called_once()
     args, _ = mock_update_state.call_args
     assert args[0] is STATE
     assert args[1] == "users"
     assert STATE['users'] == "2025-01-01T00:00:00Z"  # updated entity state date
 
-    # ✅ Assert write_state was also called to persist final state
     mock_write_state.assert_called_once()
