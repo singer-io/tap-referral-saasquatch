@@ -34,11 +34,11 @@ def test_do_sync(mock_transformer_cls, mock_metadata_map, mock_write_record,
     mock_request_export.return_value = "fake_export_id"
     mock_stream_export.return_value = [
         {"id": "1", "name": "Alice", "dateCreated": "2025-07-01T00:00:00Z"},
-        {"id": "2", "name": "Bob", "dateCreated": "2025-07-02T00:00:00Z"}
+        {"id": "2", "name": "Bob", "dateCreated": "2025-07-02T00:00:00Z"},       # newest
+        {"id": "3", "name": "Charlie", "dateCreated": "2025-06-30T00:00:00Z"},  # older
     ]
     mock_metadata_map.return_value = {}
 
-    # Transformer mock returns row as-is
     mock_transformer = MagicMock()
     mock_transformer.transform.side_effect = lambda r, s, m: r
     mock_transformer_cls.return_value.__enter__.return_value = mock_transformer
@@ -48,16 +48,18 @@ def test_do_sync(mock_transformer_cls, mock_metadata_map, mock_write_record,
     # Verify export and stream were called correctly
     mock_request_export.assert_called_once_with("users")
     mock_stream_export.assert_called_once_with("users", "fake_export_id")
-    assert mock_write_record.call_count == 2
+    assert mock_write_record.call_count == 3
+
     mock_write_record.assert_any_call("users", {"id": "1", "name": "Alice", "dateCreated": "2025-07-01T00:00:00Z"})
     mock_write_record.assert_any_call("users", {"id": "2", "name": "Bob", "dateCreated": "2025-07-02T00:00:00Z"})
+    mock_write_record.assert_any_call("users", {"id": "3", "name": "Charlie", "dateCreated": "2025-06-30T00:00:00Z"})
 
-    # ✅ Assert update_state was called with correct arguments
+    # ✅ Assert state was updated with latest replication key
     mock_update_state.assert_called_once()
     args, _ = mock_update_state.call_args
     assert args[0] is STATE
     assert args[1] == "users"
-    assert isinstance(args[2], str)  # ISO timestamp string (export start time)
+    assert STATE['users'] == "2025-01-01T00:00:00Z"  # updated entity state date
 
     # ✅ Assert write_state was also called to persist final state
     mock_write_state.assert_called_once()
