@@ -277,6 +277,8 @@ def do_sync(catalog):
         for stream in streams_to_sync:
             sync_entity(stream, key_properties[stream], catalog, transformer)
 
+    logger.info("Sync complete")
+
 
 def do_discover():
     logger.info("Starting discovery")
