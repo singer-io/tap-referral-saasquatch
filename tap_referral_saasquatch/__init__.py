@@ -236,7 +236,7 @@ def transform_row(entity, row):
     return {field: transform_field(entity, field, value) for field, value in row.items()}
 
 
-def sync_entity(entity, key_properties):
+def sync_entity(entity, key_properties, catalog, transformer):
     start_date = get_start(entity)
     logger.info("{}: Starting sync from {}".format(entity, start_date))
 
@@ -253,37 +253,29 @@ def sync_entity(entity, key_properties):
     rows = stream_export(entity, export_id)
     logger.info("{}: Got {} records".format(entity, len(rows)))
 
+    catalog_stream = catalog.get_stream(entity)
+    meta_data = metadata.to_map(catalog.metadata)
+
     for row in rows:
-        transformed_row = transform_row(entity, row)
-        singer.write_record(entity, transformed_row)
+        transformed_row = transformer.transform(
+            row, catalog_stream.schema.to_dict(), meta_data
+        )
+        write_record(entity, transformed_row)
 
     utils.update_state(STATE, entity, export_start)
     singer.write_state(STATE)
     logger.info("{}: State synced to {}".format(entity, export_start))
 
 
-def is_selected(stream_metadata):
-        return metadata.get(stream_metadata, (), "selected")
-
-
 def do_sync(catalog):
     logger.info("Starting Referral Saasquatch sync")
-    streams_to_sync = []
-    for stream in catalog.get_selected_streams(STATE):
-        streams_to_sync.append(stream.stream)
-            
+    key_properties = {"users": ["id", "accountId"],
+                      "reward_balances": ["userId", "accountId"],
+                      "referrals": ["id"]}
+    streams_to_sync = [s.stream for s in catalog.get_selected_streams(STATE)]
     with singer.Transformer() as transformer:
-        for stream_name in streams_to_sync:
-            meta_data = metadata.to_map(catalog.metadata)
-            export_id = request_export(stream_name)
-            rows = stream_export(stream_name, export_id)
-            catalog_stream = catalog.get_stream(stream_name)
-            for record in rows:
-                transformed_record = transformer.transform(
-                    record, catalog_stream.schema.to_dict(), meta_data
-                )
-                if is_selected(meta_data):
-                    write_record(stream_name, transformed_record)
+        for stream in streams_to_sync:
+            sync_entity(stream, key_properties[stream], catalog, transformer)
 
 
 def do_discover():
