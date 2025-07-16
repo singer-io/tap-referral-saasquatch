@@ -58,6 +58,6 @@ def test_do_sync(mock_transformer_cls, mock_metadata_map, mock_write_record,
     args, _ = mock_update_state.call_args
     assert args[0] is STATE
     assert args[1] == "users"
-    assert STATE['users'] == "2025-01-01T00:00:00Z"  # updated entity state date
+    assert STATE['users'] == CONFIG['start_date']  # updated entity state date
 
     mock_write_state.assert_called_once()
