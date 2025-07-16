@@ -272,10 +272,9 @@ def do_sync(catalog):
     key_properties = {"users": ["id", "accountId"],
                       "reward_balances": ["userId", "accountId"],
                       "referrals": ["id"]}
-    streams_to_sync = [s.stream for s in catalog.get_selected_streams(STATE)]
     with singer.Transformer() as transformer:
-        for stream in streams_to_sync:
-            sync_entity(stream, key_properties[stream], catalog, transformer)
+        for stream_to_sync in catalog.get_selected_streams(STATE):
+            sync_entity(stream_to_sync.stream, key_properties[stream_to_sync.stream], catalog, transformer)
 
     logger.info("Sync complete")
 
