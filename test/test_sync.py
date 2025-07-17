@@ -1,6 +1,10 @@
+import datetime
 import pytest
 from unittest.mock import patch, MagicMock
+
+import pytz
 from tap_referral_saasquatch import do_sync, CONFIG, STATE
+from singer.utils import strftime, update_state as real_update_state
 
 CONFIG['start_date'] = '2025-01-01T00:00:00Z'
 STATE.clear()
@@ -20,7 +24,7 @@ def mock_catalog():
     return mock
 
 @patch("tap_referral_saasquatch.singer.write_state")
-@patch("tap_referral_saasquatch.utils.update_state")
+@patch("tap_referral_saasquatch.utils.update_state", side_effect=real_update_state)
 @patch("tap_referral_saasquatch.request_export")
 @patch("tap_referral_saasquatch.stream_export")
 @patch("tap_referral_saasquatch.write_record")
@@ -42,7 +46,7 @@ def test_do_sync(mock_transformer_cls, mock_metadata_map, mock_write_record,
     mock_transformer = MagicMock()
     mock_transformer.transform.side_effect = lambda r, s, m: r
     mock_transformer_cls.return_value.__enter__.return_value = mock_transformer
-
+    export_start_time = strftime(datetime.datetime.utcnow().replace(tzinfo=pytz.utc))
     do_sync(mock_catalog)
 
     mock_request_export.assert_called_once_with("users")
@@ -58,6 +62,6 @@ def test_do_sync(mock_transformer_cls, mock_metadata_map, mock_write_record,
     args, _ = mock_update_state.call_args
     assert args[0] is STATE
     assert args[1] == "users"
-    assert STATE['users'] == CONFIG['start_date']  # updated entity state date
+    assert STATE['users'] >= export_start_time  # updated entity state date
 
     mock_write_state.assert_called_once()
