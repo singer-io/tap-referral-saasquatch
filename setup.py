@@ -10,16 +10,22 @@ setup(name='tap-referral-saasquatch',
       classifiers=['Programming Language :: Python :: 3 :: Only'],
       py_modules=['tap_referral_saasquatch'],
       install_requires=[
-          'singer-python==1.2.0',
-          'requests==2.20.0',
-          'backoff==1.3.2',
-          'pytz==2018.04'
+          'singer-python==6.1.1',
+          'requests==2.32.4',
+          'backoff==2.2.1',
+          'pytz==2025.2'
       ],
+      extras_require={
+        'dev': [
+            'pylint==2.4.4',
+            'pytest==8.4.1'
+        ]
+      },
       entry_points='''
           [console_scripts]
           tap-referral-saasquatch=tap_referral_saasquatch:main
       ''',
-      packages=['tap_referral_saasquatch'],
+      packages=find_packages(),
       package_data = {
           'tap_referral_saasquatch/schemas': [
               "referrals.json",

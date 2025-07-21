@@ -2,65 +2,56 @@
   "type": "object",
   "properties": {
     "id": {
-      "type": "string",
-      "key": true
+      "type": ["null", "string"]
     },
     "accountId": {
-      "type": "string",
-      "key": true
+      "type": ["null", "string"]
     },
     "email": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "firstName": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "lastName": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "imageUrl": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "firstSeenIP": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "lastSeenIP": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "dateCreated": {
-      "anyOf": [
-        {
-          "type": "string",
-          "format": "date-time"
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "type": ["null", "string"],
+      "format": "date-time"
     },
     "emailHash": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "referralSource": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "locale": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "shareLink": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "facebookShareLink": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "twitterShareLink": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "emailShareLink": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "linkedinShareLink": {
-      "type": "string"
+      "type": ["null", "string"]
     }
   }
 }
