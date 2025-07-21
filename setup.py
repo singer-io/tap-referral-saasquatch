@@ -25,7 +25,7 @@ setup(name='tap-referral-saasquatch',
           [console_scripts]
           tap-referral-saasquatch=tap_referral_saasquatch:main
       ''',
-      packages=['tap_referral_saasquatch'],
+      packages=find_packages(),
       package_data = {
           'tap_referral_saasquatch/schemas': [
               "referrals.json",
