@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-setup(name='tap_referral_saasquatch',
+setup(name='tap-referral-saasquatch',
       version='1.0.6',
       description='Singer.io tap for extracting data from the Referral SaaSquatch API',
       author='Stitch',
@@ -23,7 +23,7 @@ setup(name='tap_referral_saasquatch',
       },
       entry_points='''
           [console_scripts]
-          tap_referral_saasquatch=tap_referral_saasquatch:main
+          tap-referral-saasquatch=tap_referral_saasquatch:main
       ''',
       packages=['tap_referral_saasquatch'],
       package_data = {
