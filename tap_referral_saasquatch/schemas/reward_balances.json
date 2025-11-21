@@ -2,21 +2,19 @@
   "type": "object",
   "properties": {
     "userId": {
-      "type": "string",
-      "key": true
+      "type": ["null", "string"]
     },
     "accountId": {
-      "type": "string",
-      "key": true
+      "type": ["null", "string"]
     },
     "type": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "amount": {
-      "type": "integer"
+      "type": ["null", "integer"]
     },
     "unit": {
-      "type": "string"
+      "type": ["null", "string"]
     }
   }
 }

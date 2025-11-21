@@ -10,8 +10,10 @@ import backoff
 import requests
 import singer
 import csv
+import json
 
-from singer import utils
+from singer import (utils, metadata, write_record)
+from tap_referral_saasquatch.discover import discover
 
 
 BASE_URL = "https://app.referralsaasquatch.com/api/v1/{}"
@@ -234,7 +236,7 @@ def transform_row(entity, row):
     return {field: transform_field(entity, field, value) for field, value in row.items()}
 
 
-def sync_entity(entity, key_properties):
+def sync_entity(entity, key_properties, catalog, transformer):
     start_date = get_start(entity)
     logger.info("{}: Starting sync from {}".format(entity, start_date))
 
@@ -251,23 +253,37 @@ def sync_entity(entity, key_properties):
     rows = stream_export(entity, export_id)
     logger.info("{}: Got {} records".format(entity, len(rows)))
 
+    catalog_stream = catalog.get_stream(entity)
+    meta_data = metadata.to_map(catalog.metadata)
+
     for row in rows:
-        transformed_row = transform_row(entity, row)
-        singer.write_record(entity, transformed_row)
+        transformed_row = transformer.transform(
+            row, catalog_stream.schema.to_dict(), meta_data
+        )
+        write_record(entity, transformed_row)
 
     utils.update_state(STATE, entity, export_start)
     singer.write_state(STATE)
     logger.info("{}: State synced to {}".format(entity, export_start))
 
 
-def do_sync():
+def do_sync(catalog):
     logger.info("Starting Referral Saasquatch sync")
-
-    sync_entity("users", ["id", "accountId"])
-    sync_entity("reward_balances", ["userId", "accountId"])
-    sync_entity("referrals", "id")
+    key_properties = {"users": ["id", "accountId"],
+                      "reward_balances": ["userId", "accountId"],
+                      "referrals": ["id"]}
+    with singer.Transformer() as transformer:
+        for stream_to_sync in catalog.get_selected_streams(STATE):
+            sync_entity(stream_to_sync.stream, key_properties[stream_to_sync.stream], catalog, transformer)
 
     logger.info("Sync complete")
+
+
+def do_discover():
+    logger.info("Starting discovery")
+    catalog = discover()
+    json.dump(catalog.to_dict(), sys.stdout, indent=2)
+    logger.info("Finished discover")
 
 
 def main_impl():
@@ -277,8 +293,10 @@ def main_impl():
     if args.state:
         STATE.update(args.state)
 
-    do_sync()
-
+    if args.discover:
+        do_discover()
+    elif args.catalog:
+        do_sync(catalog=args.catalog)
 
 def main():
     try:
