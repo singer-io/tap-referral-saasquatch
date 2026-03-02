@@ -16,7 +16,7 @@ setup(name='tap-referral-saasquatch',
       ],
       extras_require={
         'dev': [
-            'pylint==2.4.4',
+            'pylint==4.0.5',
             'pytest==8.4.1'
         ]
       },
