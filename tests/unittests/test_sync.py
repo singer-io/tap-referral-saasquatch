@@ -65,12 +65,19 @@ class TestSync(unittest.TestCase):
         stream_users.stream = "users"
         stream_referrals = MagicMock()
         stream_referrals.stream = "referrals"
+        stream_reward_balances = MagicMock()
+        stream_reward_balances.stream = "reward_balances"
 
         catalog = MagicMock()
-        catalog.get_selected_streams.return_value = [stream_users, stream_referrals]
+        catalog.get_selected_streams.return_value = [
+            stream_users,
+            stream_referrals,
+            stream_reward_balances,
+        ]
 
         do_sync(catalog)
 
-        self.assertEqual(mock_sync_entity.call_count, 2)
+        self.assertEqual(mock_sync_entity.call_count, 3)
         mock_sync_entity.assert_any_call("users", ["id", "accountId"], catalog, transformer)
         mock_sync_entity.assert_any_call("referrals", ["id"], catalog, transformer)
+        mock_sync_entity.assert_any_call("reward_balances", ["userId", "accountId"], catalog, transformer)
