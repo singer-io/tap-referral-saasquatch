@@ -2,29 +2,16 @@ import json
 import unittest
 from unittest.mock import MagicMock, patch
 
-from tap_referral_saasquatch import CONFIG, STATE, do_sync, request_export
+from tap_referral_saasquatch import STATE, do_sync, request_export
 from tap_referral_saasquatch.discover import discover
 
+try:
+    from .base import ReferralBaseTest
+except ImportError:
+    from base import ReferralBaseTest
 
-class BookmarkIntegrationTest(unittest.TestCase):
-    def setUp(self):
-        self.original_config = dict(CONFIG)
-        self.original_state = dict(STATE)
 
-        CONFIG.update(
-            {
-                "api_key": "dummy-key",
-                "tenant_alias": "dummy-tenant",
-                "start_date": "2025-01-01T00:00:00Z",
-            }
-        )
-        STATE.clear()
-
-    def tearDown(self):
-        CONFIG.clear()
-        CONFIG.update(self.original_config)
-        STATE.clear()
-        STATE.update(self.original_state)
+class BookmarkIntegrationTest(ReferralBaseTest, unittest.TestCase):
 
     @patch("tap_referral_saasquatch.export_ready", return_value=True)
     @patch("tap_referral_saasquatch.session.send")
@@ -69,11 +56,14 @@ class BookmarkIntegrationTest(unittest.TestCase):
 
         mock_request_export.return_value = "exp-users"
         mock_stream_export.return_value = [
-            {"id": "u1", "accountId": "a1", "dateCreated": "2025-01-01T00:00:00Z"}
+            self._generate_stream_record("users", date_value="2025-01-05T00:00:00Z"),
+            self._generate_stream_record("users", date_value="2025-02-15T00:00:00Z"),
+            self._generate_stream_record("users", date_value="2025-03-01T00:00:00Z"),
         ]
 
         do_sync(catalog)
 
         mock_request_export.assert_called_once_with("users")
+        self.assertEqual(_mock_write_record.call_count, 3)
         self.assertIn("users", STATE)
         self.assertGreaterEqual(STATE["users"], old_bookmark)
