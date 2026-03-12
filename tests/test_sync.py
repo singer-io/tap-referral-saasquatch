@@ -2,7 +2,6 @@ import datetime
 import pytest
 from unittest.mock import patch, MagicMock
 
-import pytz
 from tap_referral_saasquatch import do_sync, CONFIG, STATE
 from singer.utils import strftime, update_state as real_update_state
 
@@ -46,7 +45,7 @@ def test_do_sync(mock_transformer_cls, mock_metadata_map, mock_write_record,
     mock_transformer = MagicMock()
     mock_transformer.transform.side_effect = lambda r, s, m: r
     mock_transformer_cls.return_value.__enter__.return_value = mock_transformer
-    export_start_time = strftime(datetime.datetime.utcnow().replace(tzinfo=pytz.utc))
+    export_start_time = strftime(datetime.datetime.now(datetime.UTC))
     do_sync(mock_catalog)
 
     mock_request_export.assert_called_once_with("users")

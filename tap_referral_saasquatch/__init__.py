@@ -4,7 +4,6 @@ import datetime
 import os
 import sys
 import time
-import pytz
 
 import backoff
 import requests
@@ -75,7 +74,7 @@ def request_export(entity):
     data = {
         "type": entity_export_types[entity],
         "format": "CSV",
-        "name": "Stitch Streams {}:{}".format(entity, datetime.datetime.utcnow()),
+        "name": "Stitch Streams {}:{}".format(entity, datetime.datetime.now(datetime.UTC)),
         "params": {
             "createdOrUpdatedSince": get_start(entity),
         },
@@ -206,7 +205,7 @@ def transform_timestamp(value):
     if not value:
         return None
 
-    return utils.strftime(datetime.datetime.utcfromtimestamp(int(value) * 0.001).replace(tzinfo=pytz.utc))
+    return utils.strftime(datetime.datetime.fromtimestamp(int(value) * 0.001, tz=datetime.UTC))
 
 
 TRANSFORMS = {
@@ -245,7 +244,7 @@ def sync_entity(entity, key_properties, catalog, transformer):
     logger.info("{}: Sent schema".format(entity))
 
     logger.info("{}: Requesting export".format(entity))
-    export_start = utils.strftime(datetime.datetime.utcnow().replace(tzinfo=pytz.utc))
+    export_start = utils.strftime(datetime.datetime.now(datetime.UTC))
     export_id = request_export(entity)
 
     logger.info("{}: Export ready".format(entity))
