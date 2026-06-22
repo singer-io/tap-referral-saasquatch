@@ -1,11 +1,12 @@
 import unittest
+from unittest.mock import MagicMock
 
 from tap_referral_saasquatch.discover import discover
 
 
 class AutomaticFieldsIntegrationTest(unittest.TestCase):
     def test_primary_and_replication_keys_are_automatic(self):
-        catalog = discover()
+        catalog = discover(MagicMock())
 
         for stream in catalog.streams:
             root = [m for m in stream.metadata if m.get("breadcrumb") in ((), [])][0]
