@@ -13,6 +13,7 @@ import json
 
 from singer import (utils, metadata, write_record)
 from tap_referral_saasquatch.discover import discover
+from tap_referral_saasquatch.exceptions import ReferralSaasquatchForbiddenError
 
 
 BASE_URL = "https://app.referralsaasquatch.com/api/v1/{}"
@@ -30,6 +31,46 @@ entity_export_types = {
 
 logger = singer.get_logger()
 session = requests.Session()
+
+
+class Client:
+    def __init__(self, config):
+        self.config = config
+        self.session = requests.Session()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        self.session.close()
+
+    def probe_stream_access(self, stream_name) -> bool:
+        """Return whether credentials have read access for a stream export type."""
+        url = BASE_URL.format(self.config['tenant_alias']) + "/export"
+        auth = ("", self.config['api_key'])
+        headers = {'Content-Type': "application/json"}
+        if 'user_agent' in self.config:
+            headers['User-Agent'] = self.config['user_agent']
+
+        data = {
+            "type": entity_export_types[stream_name],
+            "format": "CSV",
+            "name": "Discover Access Probe {}:{}".format(stream_name, datetime.datetime.now(datetime.UTC)),
+            "params": {
+                "createdOrUpdatedSince": self.config['start_date'],
+            },
+        }
+
+        req = requests.Request('POST', url, auth=auth, headers=headers, json=data).prepare()
+        resp = self.session.send(req)
+
+        if resp.status_code == 403:
+            return False
+        if resp.status_code >= 400:
+            raise ReferralSaasquatchForbiddenError(
+                "HTTP-error-code: {}, Error: {}".format(resp.status_code, resp.content)
+            )
+        return True
 
 
 def get_start(entity):
@@ -278,9 +319,9 @@ def do_sync(catalog):
     logger.info("Sync complete")
 
 
-def do_discover():
+def do_discover(client):
     logger.info("Starting discovery")
-    catalog = discover()
+    catalog = discover(client)
     json.dump(catalog.to_dict(), sys.stdout, indent=2)
     logger.info("Finished discover")
 
@@ -293,7 +334,8 @@ def main_impl():
         STATE.update(args.state)
 
     if args.discover:
-        do_discover()
+        with Client(CONFIG) as client:
+            do_discover(client)
     elif args.catalog:
         do_sync(catalog=args.catalog)
 

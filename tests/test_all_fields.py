@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from tap_referral_saasquatch import STATE, do_sync
 from tap_referral_saasquatch.discover import discover
@@ -27,7 +27,7 @@ class AllFieldsIntegrationTest(ReferralBaseTest, unittest.TestCase):
         mock_write_record,
         _mock_write_state,
     ):
-        catalog = discover()
+        catalog = discover(MagicMock())
         catalog.metadata = []
         catalog.get_selected_streams = lambda _state: catalog.streams
 

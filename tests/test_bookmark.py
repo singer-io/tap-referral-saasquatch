@@ -48,7 +48,7 @@ class BookmarkIntegrationTest(ReferralBaseTest, unittest.TestCase):
         old_bookmark = "2025-01-01T00:00:00Z"
         STATE["users"] = old_bookmark
 
-        catalog = discover()
+        catalog = discover(MagicMock())
         catalog.metadata = []
         catalog.get_selected_streams = lambda _state: [
             stream for stream in catalog.streams if stream.tap_stream_id == "users"
