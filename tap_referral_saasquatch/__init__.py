@@ -70,8 +70,8 @@ class Client:
         if resp.status_code == 403:
             return False
         if resp.status_code >= 400:
-            raise ReferralSaasquatchForbiddenError(
-                "HTTP-error-code: {}, Error: {}".format(resp.status_code, resp.content)
+            raise ReferralSaasquatchError(
+                "HTTP-error-code: {}, Error: {}".format(resp.status_code, resp.text)
             )
         return True
 
