@@ -13,7 +13,10 @@ import json
 
 from singer import (utils, metadata, write_record)
 from tap_referral_saasquatch.discover import discover
-from tap_referral_saasquatch.exceptions import ReferralSaasquatchForbiddenError
+from tap_referral_saasquatch.exceptions import (
+    ReferralSaasquatchError,
+    ReferralSaasquatchForbiddenError,
+)
 
 
 BASE_URL = "https://app.referralsaasquatch.com/api/v1/{}"
