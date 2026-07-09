@@ -4,5 +4,8 @@
   * Streams the credentials cannot access (403) are now excluded from the catalog during discovery instead of raising an error.
   * Added/updated unit tests for discovery access checks and sync/bookmark behavior.
 
+## 2.1.1
+  * Bump requests version to 2.34.2 to address security vulnerability [#25](https://github.com/singer-io/tap-referral-saasquatch/pull/25)
+
 ## 2.1.0
   * Bumps singer-python, requests dependency [#23](https://github.com/singer-io/tap-referral-saasquatch/pull/23)
