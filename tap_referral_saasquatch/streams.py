@@ -14,10 +14,9 @@ class BaseStream:
         self.catalog = catalog
 
     def check_access(self) -> bool:
-        if self.client is None:
-            return True
         try:
             return self.client.probe_stream_access(self.name)
+            return True
         except ReferralSaasquatchForbiddenError as err:
             LOGGER.warning(
                 "Unauthorized Stream: %s, excluding from catalog. HTTP-Error-Message:'%s'",
