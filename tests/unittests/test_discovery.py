@@ -1,12 +1,15 @@
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from singer import metadata
 
 from tap_referral_saasquatch.discover import _apply_access_checks, discover
-from tap_referral_saasquatch.exceptions import ReferralSaasquatchForbiddenError
+from tap_referral_saasquatch.exceptions import (
+    ReferralSaasquatchError,
+    ReferralSaasquatchForbiddenError,
+)
 from tap_referral_saasquatch.schema import get_schemas
-from tap_referral_saasquatch.streams import STREAMS
+from tap_referral_saasquatch.streams import STREAMS, Users
 
 
 class TestDiscoveryAndSchema(unittest.TestCase):
@@ -47,3 +50,26 @@ class TestDiscoveryAndSchema(unittest.TestCase):
 
         with self.assertRaises(ReferralSaasquatchForbiddenError):
             _apply_access_checks(client, schemas, field_metadata)
+
+    @patch("tap_referral_saasquatch.streams.LOGGER")
+    def test_check_access_logs_and_returns_false_on_forbidden(self, mock_logger):
+        client = MagicMock()
+        client.probe_stream_access.side_effect = ReferralSaasquatchForbiddenError(
+            "HTTP-error-code: 403, Error: forbidden"
+        )
+        stream = Users(client=client)
+
+        self.assertFalse(stream.check_access())
+        mock_logger.warning.assert_called_once()
+
+    @patch("tap_referral_saasquatch.streams.LOGGER")
+    def test_check_access_logs_and_raises_typed_error_on_probe_failure(self, mock_logger):
+        client = MagicMock()
+        client.probe_stream_access.side_effect = RuntimeError("boom")
+        stream = Users(client=client)
+
+        with self.assertRaises(ReferralSaasquatchError) as err:
+            stream.check_access()
+
+        mock_logger.error.assert_called_once()
+        self.assertIn("HTTP-error-code: 500", str(err.exception))

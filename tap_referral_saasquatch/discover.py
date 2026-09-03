@@ -9,21 +9,8 @@ from tap_referral_saasquatch.streams import STREAMS
 LOGGER = singer.get_logger()
 
 
-def _prune_inaccessible_children(schemas: dict, field_metadata: dict) -> None:
-    """Remove child streams whose parent stream is missing from schemas."""
-    for stream_name, stream_cls in list(STREAMS.items()):
-        if stream_name in schemas and stream_cls.parent and stream_cls.parent not in schemas:
-            LOGGER.warning(
-                "Stream '%s' excluded from catalog because its parent stream '%s' is not accessible.",
-                stream_name,
-                stream_cls.parent,
-            )
-            schemas.pop(stream_name, None)
-            field_metadata.pop(stream_name, None)
-
-
 def _apply_access_checks(client, schemas: dict, field_metadata: dict) -> None:
-    """Exclude streams credentials cannot access and prune dependent children."""
+    """Exclude streams credentials cannot access."""
     inaccessible_streams = [
         stream_name
         for stream_name, stream_obj in STREAMS.items()
@@ -34,8 +21,6 @@ def _apply_access_checks(client, schemas: dict, field_metadata: dict) -> None:
     for stream_name in inaccessible_streams:
         schemas.pop(stream_name, None)
         field_metadata.pop(stream_name, None)
-
-    _prune_inaccessible_children(schemas, field_metadata)
 
     if not schemas:
         raise ReferralSaasquatchForbiddenError(

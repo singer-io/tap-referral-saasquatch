@@ -11,7 +11,7 @@ setup(name='tap-referral-saasquatch',
       py_modules=['tap_referral_saasquatch'],
       install_requires=[
           'singer-python==6.8.0',
-          'requests==2.32.5',
+          'requests==2.34.2',
           'backoff==2.2.1',
       ],
       extras_require={
