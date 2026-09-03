@@ -21,7 +21,7 @@ from tap_referral_saasquatch import (
     transform_row,
 )
 from tap_referral_saasquatch.discover import discover
-from tap_referral_saasquatch.exceptions import ReferralSaasquatchForbiddenError
+from tap_referral_saasquatch.exceptions import ReferralSaasquatchError, ReferralSaasquatchForbiddenError
 from tap_referral_saasquatch.streams import Users
 
 
@@ -65,9 +65,9 @@ class TestInitModuleCoverage(unittest.TestCase):
 
         error_response = MagicMock()
         error_response.status_code = 500
-        error_response.content = b"boom"
+        error_response.text = "boom"
         client.session.send = MagicMock(return_value=error_response)
-        with self.assertRaises(ReferralSaasquatchForbiddenError):
+        with self.assertRaises(ReferralSaasquatchError):
             client.probe_stream_access("users")
 
     def test_probe_stream_access_success_with_user_agent(self):
