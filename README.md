@@ -11,6 +11,9 @@ This tap:
 - Outputs the schema for each resource
 - Incrementally pulls data based on the input state
 
+Discovery verifies access by creating and immediately deleting a temporary
+export for each supported resource.
+
 
 ## Quick start
 

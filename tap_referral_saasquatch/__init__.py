@@ -13,6 +13,11 @@ import json
 
 from singer import (utils, metadata, write_record)
 from tap_referral_saasquatch.discover import discover
+from tap_referral_saasquatch.exceptions import (
+    ReferralSaasquatchAuthenticationError,
+    ReferralSaasquatchError,
+    ReferralSaasquatchForbiddenError,
+)
 
 
 BASE_URL = "https://app.referralsaasquatch.com/api/v1/{}"
@@ -30,6 +35,69 @@ entity_export_types = {
 
 logger = singer.get_logger()
 session = requests.Session()
+
+
+class Client:
+    def __init__(self, config):
+        self.config = config
+        self.session = requests.Session()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        self.session.close()
+
+    def probe_stream_access(self, stream_name) -> bool:
+        """Verify access using a temporary export and delete it immediately."""
+        url = BASE_URL.format(self.config['tenant_alias']) + "/export"
+        auth = ("", self.config['api_key'])
+        headers = {'Content-Type': "application/json"}
+        if 'user_agent' in self.config:
+            headers['User-Agent'] = self.config['user_agent']
+
+        data = {
+            "type": entity_export_types[stream_name],
+            "format": "CSV",
+            "name": "Discover Access Probe {}:{}".format(stream_name, datetime.datetime.now(datetime.UTC)),
+            "params": {
+                "createdOrUpdatedSince": self.config['start_date'],
+            },
+        }
+
+        req = requests.Request('POST', url, auth=auth, headers=headers, json=data).prepare()
+        resp = self.session.send(req)
+
+        if resp.status_code == 403:
+            raise ReferralSaasquatchForbiddenError(
+                "HTTP-error-code: 403, Error: {}".format(resp.text)
+            )
+        if resp.status_code == 401:
+            raise ReferralSaasquatchAuthenticationError(
+                "HTTP-error-code: 401, Error: {}".format(resp.text)
+            )
+        if resp.status_code >= 400:
+            raise ReferralSaasquatchError(
+                "HTTP-error-code: {}, Error: {}".format(resp.status_code, resp.text)
+            )
+
+        export_id = resp.json().get('id')
+        if not export_id:
+            raise ReferralSaasquatchError(
+                "Access probe did not return an export ID for stream '{}'".format(stream_name)
+            )
+
+        delete_response = self.session.delete(
+            "{}/{}".format(url, export_id), auth=auth, headers=headers
+        )
+        if delete_response.status_code >= 400:
+            raise ReferralSaasquatchError(
+                "Failed to delete access probe '{}' for stream '{}': HTTP-error-code: {}, Error: {}".format(
+                    export_id, stream_name, delete_response.status_code, delete_response.text
+                )
+            )
+
+        return True
 
 
 def get_start(entity):
@@ -278,9 +346,9 @@ def do_sync(catalog):
     logger.info("Sync complete")
 
 
-def do_discover():
+def do_discover(client):
     logger.info("Starting discovery")
-    catalog = discover()
+    catalog = discover(client)
     json.dump(catalog.to_dict(), sys.stdout, indent=2)
     logger.info("Finished discover")
 
@@ -293,7 +361,8 @@ def main_impl():
         STATE.update(args.state)
 
     if args.discover:
-        do_discover()
+        with Client(CONFIG) as client:
+            do_discover(client)
     elif args.catalog:
         do_sync(catalog=args.catalog)
 

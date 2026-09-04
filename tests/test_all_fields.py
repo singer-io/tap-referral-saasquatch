@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from tap_referral_saasquatch import STATE, do_sync
 from tap_referral_saasquatch.discover import discover
@@ -27,7 +27,7 @@ class AllFieldsIntegrationTest(ReferralBaseTest, unittest.TestCase):
         mock_write_record,
         _mock_write_state,
     ):
-        catalog = discover()
+        catalog = discover(MagicMock())
         catalog.metadata = []
         catalog.get_selected_streams = lambda _state: catalog.streams
 
@@ -50,11 +50,12 @@ class AllFieldsIntegrationTest(ReferralBaseTest, unittest.TestCase):
         self.assertEqual(written_streams, set(STREAMS.keys()))
 
         for stream_name, stream_cls in STREAMS.items():
-            replication_key = stream_cls.replication_keys
-            if replication_key:
-                with self.subTest(stream=stream_name, replication_key=replication_key):
+            replication_keys = stream_cls.replication_keys
+            if replication_keys:
+                with self.subTest(stream=stream_name, replication_keys=replication_keys):
                     record = data_by_stream[stream_name][0]
-                    self.assertIn(replication_key, record)
+                    for replication_key in replication_keys:
+                        self.assertIn(replication_key, record)
 
         self.assertIn("users", STATE)
         self.assertIn("reward_balances", STATE)

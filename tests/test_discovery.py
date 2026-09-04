@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import MagicMock
 
 from singer import metadata
 
@@ -12,7 +13,7 @@ except ImportError:
 
 class DiscoveryIntegrationTest(ReferralBaseTest, unittest.TestCase):
     def test_discovery_expected_streams_and_metadata(self):
-        catalog = discover()
+        catalog = discover(MagicMock())
         stream_map = {stream.tap_stream_id: stream for stream in catalog.streams}
         expected_streams = self.expected_metadata()
 
