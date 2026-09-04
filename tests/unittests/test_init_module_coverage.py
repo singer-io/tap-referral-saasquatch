@@ -21,7 +21,11 @@ from tap_referral_saasquatch import (
     transform_row,
 )
 from tap_referral_saasquatch.discover import discover
-from tap_referral_saasquatch.exceptions import ReferralSaasquatchError, ReferralSaasquatchForbiddenError
+from tap_referral_saasquatch.exceptions import (
+    ReferralSaasquatchAuthenticationError,
+    ReferralSaasquatchError,
+    ReferralSaasquatchForbiddenError,
+)
 from tap_referral_saasquatch.streams import Users
 
 
@@ -68,6 +72,16 @@ class TestInitModuleCoverage(unittest.TestCase):
         error_response.text = "boom"
         client.session.send = MagicMock(return_value=error_response)
         with self.assertRaises(ReferralSaasquatchError):
+            client.probe_stream_access("users")
+
+    def test_probe_stream_access_raises_authentication_error_on_401(self):
+        client = Client(CONFIG)
+        response = MagicMock()
+        response.status_code = 401
+        response.text = "invalid API key"
+        client.session.send = MagicMock(return_value=response)
+
+        with self.assertRaisesRegex(ReferralSaasquatchAuthenticationError, "401.*invalid API key"):
             client.probe_stream_access("users")
 
     def test_probe_stream_access_success_with_user_agent(self):

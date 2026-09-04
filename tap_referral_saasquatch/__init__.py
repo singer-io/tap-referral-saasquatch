@@ -14,6 +14,7 @@ import json
 from singer import (utils, metadata, write_record)
 from tap_referral_saasquatch.discover import discover
 from tap_referral_saasquatch.exceptions import (
+    ReferralSaasquatchAuthenticationError,
     ReferralSaasquatchError,
     ReferralSaasquatchForbiddenError,
 )
@@ -69,6 +70,10 @@ class Client:
 
         if resp.status_code == 403:
             return False
+        if resp.status_code == 401:
+            raise ReferralSaasquatchAuthenticationError(
+                "HTTP-error-code: 401, Error: {}".format(resp.text)
+            )
         if resp.status_code >= 400:
             raise ReferralSaasquatchError(
                 "HTTP-error-code: {}, Error: {}".format(resp.status_code, resp.text)

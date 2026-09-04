@@ -5,6 +5,7 @@ from singer import metadata
 
 from tap_referral_saasquatch.discover import _apply_access_checks, discover
 from tap_referral_saasquatch.exceptions import (
+    ReferralSaasquatchAuthenticationError,
     ReferralSaasquatchError,
     ReferralSaasquatchForbiddenError,
 )
@@ -37,11 +38,15 @@ class TestDiscoveryAndSchema(unittest.TestCase):
         client = MagicMock()
         client.probe_stream_access.side_effect = lambda stream_name: stream_name != "users"
 
-        _apply_access_checks(client, schemas, field_metadata)
+        with self.assertLogs(level="WARNING") as logs:
+            _apply_access_checks(client, schemas, field_metadata)
 
         self.assertNotIn("users", schemas)
         self.assertIn("referrals", schemas)
         self.assertIn("reward_balances", schemas)
+        warning_text = "\n".join(logs.output)
+        self.assertIn("users", warning_text)
+        self.assertIn("403", warning_text)
 
     def test_apply_access_checks_raises_when_none_accessible(self):
         schemas, field_metadata = get_schemas()
@@ -50,6 +55,18 @@ class TestDiscoveryAndSchema(unittest.TestCase):
 
         with self.assertRaises(ReferralSaasquatchForbiddenError):
             _apply_access_checks(client, schemas, field_metadata)
+
+    def test_apply_access_checks_fails_fast_on_invalid_credentials(self):
+        schemas, field_metadata = get_schemas()
+        client = MagicMock()
+        client.probe_stream_access.side_effect = ReferralSaasquatchAuthenticationError(
+            "HTTP-error-code: 401, Error: invalid API key"
+        )
+
+        with self.assertRaisesRegex(ReferralSaasquatchAuthenticationError, "401"):
+            _apply_access_checks(client, schemas, field_metadata)
+
+        client.probe_stream_access.assert_called_once_with("referrals")
 
     @patch("tap_referral_saasquatch.streams.LOGGER")
     def test_check_access_logs_and_returns_false_on_forbidden(self, mock_logger):
@@ -62,14 +79,12 @@ class TestDiscoveryAndSchema(unittest.TestCase):
         self.assertFalse(stream.check_access())
         mock_logger.warning.assert_called_once()
 
-    @patch("tap_referral_saasquatch.streams.LOGGER")
-    def test_check_access_logs_and_raises_typed_error_on_probe_failure(self, mock_logger):
+    def test_check_access_preserves_non_authorization_error(self):
         client = MagicMock()
-        client.probe_stream_access.side_effect = RuntimeError("boom")
+        client.probe_stream_access.side_effect = ReferralSaasquatchError(
+            "HTTP-error-code: 429, Error: rate limited"
+        )
         stream = Users(client=client)
 
-        with self.assertRaises(ReferralSaasquatchError) as err:
+        with self.assertRaisesRegex(ReferralSaasquatchError, "429"):
             stream.check_access()
-
-        mock_logger.error.assert_called_once()
-        self.assertIn("HTTP-error-code: 500", str(err.exception))

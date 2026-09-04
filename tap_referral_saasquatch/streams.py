@@ -15,23 +15,23 @@ class BaseStream:
 
     def check_access(self) -> bool:
         try:
-            return self.client.probe_stream_access(self.name)
+            has_access = self.client.probe_stream_access(self.name)
         except ReferralSaasquatchForbiddenError as err:
             LOGGER.warning(
-                "Unauthorized Stream: %s, excluding from catalog. HTTP-Error-Message:'%s'",
-                self.__class__.__name__,
-                err,
-            )
-            return False
-        except Exception as err:
-            LOGGER.error(
-                "Failed to check access for stream '%s': %s",
+                "Unauthorized stream '%s' excluded from catalog. HTTP status: 403. Error: %s",
                 self.name,
                 err,
             )
-            raise ReferralSaasquatchError(
-                "HTTP-error-code: 500, Error: Failed to check stream access for '{}'".format(self.name)
-            ) from err
+            return False
+
+        if not has_access:
+            LOGGER.warning(
+                "Unauthorized stream '%s' excluded from catalog. HTTP status: 403. Error: insufficient permissions",
+                self.name,
+            )
+            return False
+
+        return True
 
 
 class Referrals(BaseStream):
