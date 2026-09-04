@@ -15,7 +15,7 @@ class BaseStream:
 
     def check_access(self) -> bool:
         try:
-            return self.client.probe_stream_access(self.name)
+            self.client.probe_stream_access(self.name)
             return True
         except ReferralSaasquatchForbiddenError as err:
             LOGGER.warning(

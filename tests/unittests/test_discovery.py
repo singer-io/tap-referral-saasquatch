@@ -9,7 +9,7 @@ from tap_referral_saasquatch.exceptions import (
     ReferralSaasquatchForbiddenError,
 )
 from tap_referral_saasquatch.schema import get_schemas
-from tap_referral_saasquatch.streams import STREAMS, Users
+from tap_referral_saasquatch.streams import BaseStream, STREAMS, Users
 
 
 class TestDiscoveryAndSchema(unittest.TestCase):
@@ -34,10 +34,13 @@ class TestDiscoveryAndSchema(unittest.TestCase):
 
     def test_apply_access_checks_excludes_inaccessible_streams(self):
         schemas, field_metadata = get_schemas()
-        client = MagicMock()
-        client.probe_stream_access.side_effect = lambda stream: stream != "users"
 
-        _apply_access_checks(client, schemas, field_metadata)
+        with patch.object(
+            BaseStream,
+            "check_access",
+            side_effect=[True, True, False],
+        ):
+            _apply_access_checks(MagicMock(), schemas, field_metadata)
 
         self.assertNotIn("users", schemas)
         self.assertIn("referrals", schemas)
@@ -45,11 +48,10 @@ class TestDiscoveryAndSchema(unittest.TestCase):
 
     def test_apply_access_checks_raises_when_none_accessible(self):
         schemas, field_metadata = get_schemas()
-        client = MagicMock()
-        client.probe_stream_access.return_value = False
 
-        with self.assertRaises(ReferralSaasquatchForbiddenError):
-            _apply_access_checks(client, schemas, field_metadata)
+        with patch.object(BaseStream, "check_access", return_value=False):
+            with self.assertRaises(ReferralSaasquatchForbiddenError):
+                _apply_access_checks(MagicMock(), schemas, field_metadata)
 
     @patch("tap_referral_saasquatch.streams.LOGGER")
     def test_check_access_logs_and_returns_false_on_forbidden(self, mock_logger):
