@@ -49,7 +49,7 @@ class Client:
         self.session.close()
 
     def probe_stream_access(self, stream_name) -> bool:
-        """Return whether credentials have read access for a stream export type."""
+        """Verify access using a temporary export and delete it immediately."""
         url = BASE_URL.format(self.config['tenant_alias']) + "/export"
         auth = ("", self.config['api_key'])
         headers = {'Content-Type': "application/json"}
@@ -69,7 +69,9 @@ class Client:
         resp = self.session.send(req)
 
         if resp.status_code == 403:
-            return False
+            raise ReferralSaasquatchForbiddenError(
+                "HTTP-error-code: 403, Error: {}".format(resp.text)
+            )
         if resp.status_code == 401:
             raise ReferralSaasquatchAuthenticationError(
                 "HTTP-error-code: 401, Error: {}".format(resp.text)
@@ -78,6 +80,23 @@ class Client:
             raise ReferralSaasquatchError(
                 "HTTP-error-code: {}, Error: {}".format(resp.status_code, resp.text)
             )
+
+        export_id = resp.json().get('id')
+        if not export_id:
+            raise ReferralSaasquatchError(
+                "Access probe did not return an export ID for stream '{}'".format(stream_name)
+            )
+
+        delete_response = self.session.delete(
+            "{}/{}".format(url, export_id), auth=auth, headers=headers
+        )
+        if delete_response.status_code >= 400:
+            raise ReferralSaasquatchError(
+                "Failed to delete access probe for stream '{}': HTTP-error-code: {}, Error: {}".format(
+                    stream_name, delete_response.status_code, delete_response.text
+                )
+            )
+
         return True
 
 

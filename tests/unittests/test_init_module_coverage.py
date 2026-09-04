@@ -64,8 +64,10 @@ class TestInitModuleCoverage(unittest.TestCase):
         client = Client(CONFIG)
         forbidden_response = MagicMock()
         forbidden_response.status_code = 403
+        forbidden_response.text = "insufficient permissions"
         client.session.send = MagicMock(return_value=forbidden_response)
-        self.assertFalse(client.probe_stream_access("users"))
+        with self.assertRaisesRegex(ReferralSaasquatchForbiddenError, "403.*insufficient permissions"):
+            client.probe_stream_access("users")
 
         error_response = MagicMock()
         error_response.status_code = 500
@@ -90,9 +92,28 @@ class TestInitModuleCoverage(unittest.TestCase):
         client = Client(config)
         success_response = MagicMock()
         success_response.status_code = 200
+        success_response.json.return_value = {"id": "probe-users"}
         client.session.send = MagicMock(return_value=success_response)
+        delete_response = MagicMock()
+        delete_response.status_code = 204
+        client.session.delete = MagicMock(return_value=delete_response)
 
         self.assertTrue(client.probe_stream_access("users"))
+        client.session.delete.assert_called_once()
+
+    def test_probe_stream_access_raises_when_cleanup_fails(self):
+        client = Client(CONFIG)
+        success_response = MagicMock()
+        success_response.status_code = 200
+        success_response.json.return_value = {"id": "probe-users"}
+        delete_response = MagicMock()
+        delete_response.status_code = 500
+        delete_response.text = "cleanup failed"
+        client.session.send = MagicMock(return_value=success_response)
+        client.session.delete = MagicMock(return_value=delete_response)
+
+        with self.assertRaisesRegex(ReferralSaasquatchError, "delete access probe.*500"):
+            client.probe_stream_access("users")
 
     @patch("tap_referral_saasquatch.utils.load_json", return_value={"type": "object"})
     def test_get_abs_path_and_load_schema(self, mock_load_json):
