@@ -92,8 +92,8 @@ class Client:
         )
         if delete_response.status_code >= 400:
             raise ReferralSaasquatchError(
-                "Failed to delete access probe for stream '{}': HTTP-error-code: {}, Error: {}".format(
-                    stream_name, delete_response.status_code, delete_response.text
+                "Failed to delete access probe '{}' for stream '{}': HTTP-error-code: {}, Error: {}".format(
+                    export_id, stream_name, delete_response.status_code, delete_response.text
                 )
             )
 

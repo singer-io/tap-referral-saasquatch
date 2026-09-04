@@ -99,7 +99,11 @@ class TestInitModuleCoverage(unittest.TestCase):
         client.session.delete = MagicMock(return_value=delete_response)
 
         self.assertTrue(client.probe_stream_access("users"))
-        client.session.delete.assert_called_once()
+        client.session.delete.assert_called_once_with(
+            "https://app.referralsaasquatch.com/api/v1/tenant-a/export/probe-users",
+            auth=("", "dummy-key"),
+            headers={"Content-Type": "application/json", "User-Agent": "ua-test"},
+        )
 
     def test_probe_stream_access_raises_when_cleanup_fails(self):
         client = Client(CONFIG)
@@ -112,7 +116,7 @@ class TestInitModuleCoverage(unittest.TestCase):
         client.session.send = MagicMock(return_value=success_response)
         client.session.delete = MagicMock(return_value=delete_response)
 
-        with self.assertRaisesRegex(ReferralSaasquatchError, "delete access probe.*500"):
+        with self.assertRaisesRegex(ReferralSaasquatchError, "delete access probe 'probe-users'.*500"):
             client.probe_stream_access("users")
 
     @patch("tap_referral_saasquatch.utils.load_json", return_value={"type": "object"})
