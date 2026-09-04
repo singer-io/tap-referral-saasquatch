@@ -192,8 +192,12 @@ class TestInitModuleCoverage(unittest.TestCase):
         with self.assertRaises(ValueError):
             discover(MagicMock())
 
-    def test_check_access_with_no_client_returns_true(self):
-        self.assertTrue(Users(client=None).check_access())
+    def test_check_access_returns_client_probe_result(self):
+        client = MagicMock()
+        client.probe_stream_access.return_value = True
+
+        self.assertTrue(Users(client=client).check_access())
+        client.probe_stream_access.assert_called_once_with("users")
 
     @patch("singer.utils.parse_args")
     def test_main_guard_executes_without_crash(self, mock_parse_args):
