@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(name='tap-referral-saasquatch',
-      version='2.1.1',
+      version='2.1.2',
       description='Singer.io tap for extracting data from the Referral SaaSquatch API',
       author='Stitch',
       url='https://singer.io',
@@ -17,7 +17,7 @@ setup(name='tap-referral-saasquatch',
       extras_require={
         'dev': [
             'pylint==4.0.5',
-            'pytest==8.4.1'
+            'pytest==9.1.1'
         ]
       },
       entry_points='''
